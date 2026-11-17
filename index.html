@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  /* Layout idea: a desk — sidebar of tools on the left, one work surface on the right; flashcards look like ruled index cards with a highlighter accent. */
+  :root {
+    --bg: #eef1f7;
+    --surface: #ffffff;
+    --ink: #18203a;
+    --muted: #5d6680;
+    --line: #d9dfeb;
+    --accent: #2f54eb;
+    --accent-soft: #e3e9ff;
+    --highlight: #ffe45c;
+    --good: #1c9a5e;
+    --bad: #d2463f;
+    --card-rule: #c9d8f2;
+    --card-margin: #f2a3a3;
+    --shadow: 0 1px 2px rgba(24,32,58,.06), 0 6px 20px rgba(24,32,58,.07);
+    --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11141f; --surface: #1a1f2e; --ink: #e8ebf5; --muted: #9aa3bd; --line: #2b3247;
+      --accent: #7d97ff; --accent-soft: #232c4d; --highlight: #e8c93a; --good: #3fc285; --bad: #f06a62;
+      --card-rule: #2c3a58; --card-margin: #7a3a3a; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11141f; --surface: #1a1f2e; --ink: #e8ebf5; --muted: #9aa3bd; --line: #2b3247;
+    --accent: #7d97ff; --accent-soft: #232c4d; --highlight: #e8c93a; --good: #3fc285; --bad: #f06a62;
+    --card-rule: #2c3a58; --card-margin: #7a3a3a; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  a.btn { text-decoration: none; color: var(--ink); }
+  a.btn.primary { color: #fff; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--ink); font: 16px/1.5 var(--font-body); display: flex; }
+  h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; text-wrap: balance; margin: 0; }
+  h1 { font-size: 30px; font-weight: 800; }
+  h2 { font-size: 21px; font-weight: 700; }
+  h3 { font-size: 16px; font-weight: 700; }
+  button, input, textarea, select { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+  .num { font-variant-numeric: tabular-nums; }
+  mark { background: linear-gradient(transparent 55%, var(--highlight) 55%); color: inherit; padding: 0 2px; }
+
+  /* sidebar */
+  nav.side { width: 220px; flex-shrink: 0; padding: 22px 14px; display: flex; flex-direction: column; gap: 4px; border-right: 1px solid var(--line); background: var(--surface); }
+  .brand { font-family: var(--font-display); font-weight: 800; font-size: 22px; padding: 4px 10px 18px; display: flex; align-items: center; gap: 8px; }
+  .brand i { width: 14px; height: 18px; background: var(--highlight); border-radius: 3px; transform: rotate(-8deg); display: inline-block; }
+  nav.side a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; color: var(--muted); text-decoration: none; font-weight: 700; }
+  nav.side a:hover { background: var(--bg); color: var(--ink); }
+  nav.side a.on { background: var(--accent-soft); color: var(--accent); }
+  nav.side a svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .lang { margin-top: auto; position: relative; padding: 0 2px; }
+  .langbtn { width: 100%; justify-content: flex-start; font-size: 14px; }
+  .langbtn svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .langbtn .chev { margin-left: auto; width: 14px; height: 14px; color: var(--muted); }
+  .langmenu { position: absolute; bottom: calc(100% + 6px); left: 0; right: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 6px; display: flex; flex-direction: column; gap: 2px; z-index: 30; min-width: 180px; }
+  .langmenu button { text-align: left; border: 0; background: transparent; padding: 9px 10px; border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; gap: 10px; font-weight: 700; }
+  .langmenu button:hover { background: var(--bg); }
+  .langmenu button[aria-checked="true"] { color: var(--accent); background: var(--accent-soft); }
+  .langmenu small { color: var(--muted); font-weight: 400; }
+  .side-foot { font-size: 12px; color: var(--muted); padding: 10px; line-height: 1.5; }
+  .sync { display: inline-flex; align-items: center; gap: 6px; }
+  .sync b { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
+  .sync.ok b { background: var(--good); }
+
+  main { flex: 1; overflow-y: auto; padding: 28px clamp(16px, 4vw, 44px) 48px; }
+  .view { display: none; flex-direction: column; gap: 22px; max-width: 980px; margin: 0 auto; }
+  .view.on { display: flex; }
+  .head { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+  .head p { margin: 4px 0 0; color: var(--muted); }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; box-shadow: var(--shadow); }
+  .btn { border: 1px solid var(--line); background: var(--surface); padding: 9px 15px; border-radius: 10px; cursor: pointer; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn.good { background: var(--good); border-color: var(--good); color: #fff; }
+  .btn.bad { background: var(--bad); border-color: var(--bad); color: #fff; }
+  .btn.ghost { border-color: transparent; background: transparent; color: var(--muted); }
+  .btn.ghost:hover { color: var(--bad); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  input[type=text], input[type=number], textarea, select { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; width: 100%; }
+  textarea { resize: vertical; }
+  label { font-size: 13px; font-weight: 700; color: var(--muted); display: flex; flex-direction: column; gap: 5px; }
+
+  /* dashboard */
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .tile { display: flex; flex-direction: column; gap: 2px; }
+  .tile .big { font-family: var(--font-display); font-size: 34px; font-weight: 800; }
+  .tile .lbl { color: var(--muted); font-size: 13px; font-weight: 700; }
+  .grid2 { display: grid; grid-template-columns: 1.3fr 1fr; gap: 14px; }
+  .chart { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; align-items: end; height: 150px; padding-top: 10px; border-bottom: 1px solid var(--line); background: repeating-linear-gradient(to top, transparent 0 36px, var(--line) 36px 37px); }
+  .chart .col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
+  .chart .bar { width: 100%; max-width: 34px; background: var(--accent); border-radius: 6px 6px 0 0; min-height: 2px; position: relative; }
+  .chart .bar.today { background: var(--highlight); }
+  .chart .v { font-size: 12px; color: var(--muted); }
+  .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; font-size: 12px; color: var(--muted); text-align: center; margin-top: 6px; }
+  .decklist { display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto; padding-right: 4px; }
+  .deckrow { display: grid; grid-template-columns: 12px 1fr auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .deckrow:last-child { border-bottom: 0; }
+  .dot { width: 12px; height: 12px; border-radius: 4px; }
+  .mastery { height: 8px; background: var(--bg); border-radius: 5px; overflow: hidden; display: flex; margin-top: 6px; }
+  .mastery span { display: block; height: 100%; }
+  .meta { font-size: 13px; color: var(--muted); }
+
+  /* subjects */
+  .subjgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+  .subj { display: flex; flex-direction: column; gap: 12px; }
+  .subj-top { display: flex; gap: 12px; align-items: center; }
+  .subj h3 { font-size: 17px; }
+  .badge { width: 42px; height: 42px; border-radius: 11px; color: #fff; display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; font-size: 18px; flex-shrink: 0; }
+  .subj .mastery { margin-top: 0; }
+
+  .bygrade { display: flex; flex-direction: column; gap: 14px; }
+  .gradepick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .glevel { display: flex; flex-direction: column; gap: 6px; }
+  .glevel .chip { font-size: 13px; padding: 6px 11px; }
+  .gradesubs { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 14px; align-items: start; }
+  @media (max-width: 480px) { .gradesubs { grid-template-columns: 1fr; } }
+  .gradesubs > p, .gradesubs > .booksbar { grid-column: 1 / -1; }
+  .gsub { padding: 0; }
+  .gsub > summary { list-style: none; display: flex; align-items: center; gap: 12px; padding: 14px 18px; cursor: pointer; }
+  .gsub > summary::-webkit-details-marker { display: none; }
+  .gs-name { display: flex; flex-direction: column; flex: 1; }
+  .gsub .chev { width: 18px; height: 18px; color: var(--muted); transition: transform .2s; }
+  .gsub[open] .chev { transform: rotate(180deg); }
+  .units { display: flex; flex-direction: column; gap: 14px; padding: 0 18px 18px; }
+  .unit { display: flex; flex-direction: column; gap: 8px; }
+  .unit-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .unit h4 { margin: 0; font-family: var(--font-display); font-size: 15px; display: flex; align-items: center; gap: 8px; }
+  .unum { width: 22px; height: 22px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-size: 12px; flex-shrink: 0; }
+  .btn.small { padding: 5px 9px; font-size: 13px; color: var(--accent); }
+  .btn.small:hover { color: var(--accent); background: var(--accent-soft); }
+  .addch input { padding: 7px 10px; }
+  .booksbar { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .booksbar p { flex: 1; min-width: 260px; }
+  .booklink { text-decoration: none; color: var(--accent); }
+  .booklink svg, .booklink-sm svg { width: 15px; height: 15px; }
+  .booklink-sm { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; color: var(--accent); text-decoration: none; align-self: flex-start; }
+  .booklink-sm:hover { text-decoration: underline; }
+  .topics { display: flex; flex-direction: column; gap: 6px; }
+  .topic { display: flex; justify-content: space-between; align-items: center; gap: 10px; text-align: left; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); cursor: pointer; font-size: 15px; }
+  .topic:hover:not(:disabled) { border-color: var(--accent); }
+  .topic small { color: var(--accent); font-weight: 700; white-space: nowrap; font-size: 12px; }
+  .topic.has { background: var(--surface); }
+  .topic.has small { color: var(--good); }
+  .topic[aria-busy="true"] small { color: var(--muted); }
+  .topic:disabled { opacity: .55; cursor: wait; }
+  @media (max-width: 860px) { .gradepick { grid-template-columns: 1fr; } }
+
+  /* flashcards */
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { padding: 7px 13px; border-radius: 99px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-weight: 700; font-size: 14px; display: inline-flex; gap: 8px; align-items: center; }
+  .chip.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .stage { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .flip { perspective: 1400px; width: min(620px, 100%); aspect-ratio: 5 / 3; cursor: pointer; }
+  .flip-inner { position: relative; width: 100%; height: 100%; transition: transform .5s cubic-bezier(.3,.7,.3,1); transform-style: preserve-3d; }
+  .flip.flipped .flip-inner { transform: rotateY(180deg); }
+  .face { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--line);
+    background: var(--surface) repeating-linear-gradient(to bottom, transparent 0 31px, var(--card-rule) 31px 32px); background-position: 0 58px;
+    display: flex; flex-direction: column; padding: 18px 26px 22px 46px; overflow: auto; }
+  .face::before { content: ""; position: absolute; left: 32px; top: 0; bottom: 0; width: 2px; background: var(--card-margin); }
+  .face .tag { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+  .face .txt { flex: 1; display: flex; align-items: center; justify-content: center; text-align: center; font-family: var(--font-display); font-size: clamp(20px, 3.4vw, 30px); font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+  .face.back { transform: rotateY(180deg); }
+  .face.back .txt { font-family: var(--font-body); font-weight: 400; font-size: clamp(17px, 2.6vw, 22px); }
+  .boxes { display: flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); }
+  .boxes i { width: 22px; height: 8px; border-radius: 4px; background: var(--line); display: inline-block; }
+  .boxes i.on { background: var(--good); }
+  .kbd { font-size: 12px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; padding: 0 5px; color: var(--muted); }
+  .cardtable { width: 100%; border-collapse: collapse; font-size: 15px; }
+  .cardtable td { padding: 9px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .cardtable td:first-child { font-weight: 700; width: 38%; }
+  .cardtable td:last-child { width: 40px; text-align: right; }
+  .tablewrap { overflow-x: auto; max-height: 420px; overflow-y: auto; }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .ai { border: 1px dashed var(--accent); background: var(--accent-soft); }
+  .status { font-size: 14px; color: var(--muted); min-height: 21px; }
+  .status.err { color: var(--bad); }
+
+  /* quiz */
+  .q { font-family: var(--font-display); font-size: clamp(22px, 3vw, 28px); font-weight: 700; }
+  .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .opt { text-align: left; padding: 14px 16px; border-radius: 12px; border: 2px solid var(--line); background: var(--surface); cursor: pointer; font-size: 16px; display: flex; gap: 12px; align-items: flex-start; }
+  .opt:hover:not(:disabled) { border-color: var(--accent); }
+  .opt b { flex-shrink: 0; width: 26px; height: 26px; border-radius: 7px; background: var(--bg); display: grid; place-items: center; font-size: 13px; }
+  .opt.right { border-color: var(--good); background: color-mix(in srgb, var(--good) 12%, var(--surface)); }
+  .opt.wrong { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, var(--surface)); }
+  .progress { height: 8px; background: var(--bg); border-radius: 5px; overflow: hidden; }
+  .progress span { display: block; height: 100%; background: var(--accent); transition: width .3s; }
+  .score { font-family: var(--font-display); font-size: 64px; font-weight: 800; }
+  .miss { padding: 10px 0; border-bottom: 1px solid var(--line); }
+
+  /* focus timer */
+  .timer { display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: center; }
+  .ring { position: relative; width: 260px; height: 260px; }
+  .ring svg { transform: rotate(-90deg); }
+  .ring .clock { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring .t { font-family: var(--font-display); font-size: 56px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .ring .m { font-weight: 700; color: var(--muted); }
+  .presets { display: flex; gap: 8px; flex-wrap: wrap; }
+  .sessions { display: flex; gap: 6px; }
+  .sessions i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--accent); display: inline-block; }
+  .sessions i.done { background: var(--accent); }
+
+  /* notes */
+  .notes { display: grid; grid-template-columns: 240px 1fr; gap: 14px; min-height: 480px; }
+  .notelist { display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 560px; }
+  .note-item { text-align: left; padding: 10px 12px; border-radius: 10px; border: 1px solid transparent; background: transparent; cursor: pointer; }
+  .note-item:hover { background: var(--bg); }
+  .note-item.on { border-color: var(--line); background: var(--bg); }
+  .note-item b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .note-item small { color: var(--muted); }
+  .editor { display: flex; flex-direction: column; gap: 10px; }
+  .editor input { font-family: var(--font-display); font-size: 22px; font-weight: 700; background: transparent; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: 4px 0; }
+  .editor textarea { flex: 1; min-height: 380px; background: var(--surface) repeating-linear-gradient(to bottom, transparent 0 27px, var(--card-rule) 27px 28px); line-height: 28px; padding: 0 4px; border: 0; border-radius: 0; background-attachment: local; }
+
+  .empty { color: var(--muted); text-align: center; padding: 30px 10px; }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(30px); background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 10px; font-weight: 700; opacity: 0; transition: .25s; pointer-events: none; z-index: 20; }
+  .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 860px) {
+    body { flex-direction: column; }
+    nav.side { width: 100%; flex-direction: row; overflow-x: auto; padding: 10px 12px; border-right: 0; border-bottom: 1px solid var(--line); gap: 4px; }
+    .brand { padding: 4px 10px 4px 2px; font-size: 18px; }
+    nav.side a { padding: 8px 10px; white-space: nowrap; }
+    .side-foot { display: none; }
+    .lang { margin-top: 0; margin-left: auto; flex-shrink: 0; }
+    .langbtn { width: auto; }
+    .langmenu { bottom: auto; top: calc(100% + 6px); left: auto; right: 0; }
+    .tiles { grid-template-columns: repeat(2, 1fr); }
+    .grid2, .split, .timer, .notes { grid-template-columns: 1fr; }
+    .ring { margin: 0 auto; }
+  }
+  @media (max-width: 480px) { .opts { grid-template-columns: 1fr; } nav.side a span { display: none; } #langName { display: none; } }
+  @media (prefers-reduced-motion: reduce) { .flip-inner, .progress span, .toast { transition: none; } }
+</style>
+</head>
+<body>
+<nav class="side" aria-label="Study tools">
+  <div class="brand"><i></i>Study Desk</div>
+  <a href="#home" data-v="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span data-i="nav_home">Dashboard</span></a>
+  <a href="#subjects" data-v="subjects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5M8 7h7M8 11h5"/></svg><span data-i="nav_subjects">Subjects</span></a>
+  <a href="#cards" data-v="cards"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="15" height="12" rx="2"/><path d="M7 3h12a2 2 0 0 1 2 2v10"/></svg><span data-i="nav_cards">Flashcards</span></a>
+  <a href="#quiz" data-v="quiz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01"/></svg><span data-i="nav_quiz">Quiz</span></a>
+  <a href="#focus" data-v="focus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg><span data-i="nav_focus">Focus timer</span></a>
+  <a href="#notes" data-v="notes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l4 4v14H6z"/><path d="M9 11h7M9 15h7M9 7h3"/></svg><span data-i="nav_notes">Notes</span></a>
+  <div class="lang" id="langWrap">
+    <button class="btn langbtn" id="langBtn" aria-haspopup="true" aria-expanded="false" aria-label="Change language">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
+      <span id="langName">English</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+    <div class="langmenu" id="langMenu" role="menu" hidden></div>
+  </div>
+  <div class="side-foot"><span class="sync" id="sync"><b></b><span id="syncTxt">Saved on this device</span></span></div>
+</nav>
+
+<main>
+  <!-- ============ DASHBOARD ============ -->
+  <section class="view" id="v-home">
+    <div class="head">
+      <div><h1 id="hello">Ready to study?</h1><p id="helloSub" data-i="hello_sub">Pick a deck, run a quiz, or start a focus session.</p></div>
+      <div class="row"><a class="btn primary" href="#cards" data-i="btn_study_cards">Study flashcards</a><a class="btn" href="#focus" data-i="btn_start_focus">Start focus timer</a></div>
+    </div>
+    <div class="tiles">
+      <div class="panel tile"><span class="lbl" data-i="t_streak">Study streak</span><span class="big num" id="tStreak">0</span><span class="meta" data-i="t_streak_sub">days in a row</span></div>
+      <div class="panel tile"><span class="lbl" data-i="t_cards">Cards today</span><span class="big num" id="tCards">0</span><span class="meta" id="tCardsSub" data-i="t_cards_sub">reviewed</span></div>
+      <div class="panel tile"><span class="lbl" data-i="t_focus">Focus today</span><span class="big num" id="tFocus">0</span><span class="meta" data-i="t_focus_sub">minutes</span></div>
+      <div class="panel tile"><span class="lbl" data-i="t_quiz">Quiz average</span><span class="big num" id="tQuiz">–</span><span class="meta" id="tQuizSub">no quizzes yet</span></div>
+    </div>
+    <div class="grid2">
+      <div class="panel"><div class="row" style="justify-content:space-between"><h2 data-i="chart_title">Last 7 days</h2><span class="meta" data-i="chart_sub">cards reviewed per day</span></div><div class="chart" id="chart"></div><div class="days" id="chartDays"></div></div>
+      <div class="panel"><div class="row" style="justify-content:space-between"><h2 data-i="decks_title">Your decks</h2><span class="meta" data-i="mastery">mastery</span></div><div class="decklist" id="dashDecks"></div></div>
+    </div>
+  </section>
+
+  <!-- ============ SUBJECTS ============ -->
+  <section class="view" id="v-subjects">
+    <div class="head">
+      <div><h1 data-i="nav_subjects">Subjects</h1><p data-i="subjects_desc">Ready-made decks for every school subject. Study them as flashcards or test yourself with a quiz.</p></div>
+      <button class="btn primary" id="addAll">Add all subjects</button>
+    </div>
+    <section class="panel bygrade" aria-labelledby="gradeTitle">
+      <div><h2 id="gradeTitle" data-i="by_grade">By grade</h2><p class="meta" data-i="by_grade_desc" style="margin:4px 0 0">Choose your class to see its subjects and chapters.</p></div>
+      <div id="gradePick" class="gradepick"></div>
+    </section>
+    <div class="gradesubs" id="gradeSubjects"></div>
+    <h2 data-i="basics">Basics for every subject</h2>
+    <div class="subjgrid" id="subjGrid"></div>
+  </section>
+
+  <!-- ============ FLASHCARDS ============ -->
+  <section class="view" id="v-cards">
+    <div class="head">
+      <div><h1 data-i="nav_cards">Flashcards</h1><p data-i="cards_desc">Flip the card, then tell the desk whether you knew it. Cards you miss come back sooner.</p></div>
+      <div class="row"><button class="btn" id="editToggle">Edit deck</button><button class="btn primary" id="newDeckBtn" data-i="new_deck">New deck</button></div>
+    </div>
+    <div class="chips" id="deckChips"></div>
+    <div class="stage" id="stage">
+      <div class="flip" id="flip" tabindex="0" role="button" aria-label="Flip card">
+        <div class="flip-inner">
+          <div class="face front"><span class="tag" id="cardTagF">Question</span><div class="txt" id="cardQ"></div></div>
+          <div class="face back"><span class="tag" id="cardTagB" data-i="answer">Answer</span><div class="txt" id="cardA"></div></div>
+        </div>
+      </div>
+      <div class="boxes" id="cardBox"></div>
+      <div class="row" id="gradeRow">
+        <button class="btn bad" id="missBtn"><span data-i="didnt_know">Didn't know</span> <span class="kbd" style="color:inherit;border-color:rgba(255,255,255,.5)">1</span></button>
+        <button class="btn" id="flipBtn"><span data-i="flip">Flip</span> <span class="kbd">Space</span></button>
+        <button class="btn good" id="knewBtn"><span data-i="knew_it">Knew it</span> <span class="kbd" style="color:inherit;border-color:rgba(255,255,255,.5)">2</span></button>
+      </div>
+      <p class="meta" id="sessionTxt"></p>
+    </div>
+
+    <div id="editor" hidden>
+      <div class="split">
+        <div class="panel" style="display:flex;flex-direction:column;gap:12px">
+          <div class="row" style="justify-content:space-between"><h2 data-i="cards_in_deck">Cards in this deck</h2><button class="btn ghost" id="delDeck" data-i="delete_deck">Delete deck</button></div>
+          <label for="deckName"><span data-i="deck_name">Deck name</span><input type="text" id="deckName"></label>
+          <div class="tablewrap"><table class="cardtable"><tbody id="cardRows"></tbody></table></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <form class="panel" id="addForm" style="display:flex;flex-direction:column;gap:10px">
+            <h2 data-i="add_card_title">Add a card</h2>
+            <label for="newQ"><span data-i="q_or_term">Question or term</span><input type="text" id="newQ" required></label>
+            <label for="newA"><span data-i="answer">Answer</span><textarea id="newA" rows="2" required></textarea></label>
+            <button class="btn primary" type="submit" data-i="add_card">Add card</button>
+          </form>
+          <div class="panel ai" id="aiPanel" style="display:flex;flex-direction:column;gap:10px">
+            <h2 data-i="ai_title">Make cards with Claude</h2>
+            <label for="aiTopic"><span data-i="topic">Topic</span><input type="text" id="aiTopic" data-iph="topic_ph" placeholder="e.g. the water cycle, French food words, WW2 key dates"></label>
+            <div class="row"><label for="aiCount" style="flex-direction:row;align-items:center;gap:8px"><span data-i="how_many">How many</span><select id="aiCount" style="width:auto"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></label>
+              <button class="btn primary" id="aiBtn" type="button" data-i="write_cards">Write cards</button></div>
+            <div class="status" id="aiStatus"></div>
+          </div>
+          <details class="panel">
+            <summary style="cursor:pointer;font-weight:700" data-i="paste_title">Paste a list</summary>
+            <p class="meta"><span data-i="paste_help">One card per line, question and answer separated by a dash, colon or tab:</span> <code>photosynthesis - how plants make food from light</code></p>
+            <textarea id="bulk" rows="5" aria-label="Cards to import"></textarea>
+            <div class="row" style="margin-top:8px"><button class="btn" id="bulkBtn" type="button" data-i="import">Import cards</button></div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ QUIZ ============ -->
+  <section class="view" id="v-quiz">
+    <div class="head"><div><h1 data-i="nav_quiz">Quiz</h1><p data-i="quiz_desc">Ten multiple-choice questions from one of your decks.</p></div></div>
+    <div class="panel" id="quizSetup" style="display:flex;flex-direction:column;gap:14px">
+      <h2 data-i="choose_deck">Choose a deck</h2>
+      <div class="chips" id="quizChips"></div>
+      <div class="row"><button class="btn primary" id="quizStart" data-i="start_quiz">Start quiz</button><span class="meta" id="quizNote"></span></div>
+    </div>
+    <div class="panel" id="quizRun" hidden style="display:flex;flex-direction:column;gap:16px">
+      <div class="row" style="justify-content:space-between"><span class="meta num" id="qCount">Question 1 of 10</span><span class="meta num" id="qScore">0 correct</span></div>
+      <div class="progress"><span id="qProg" style="width:0%"></span></div>
+      <div class="q" id="qText"></div>
+      <div class="opts" id="qOpts"></div>
+      <div class="row" style="justify-content:flex-end"><button class="btn primary" id="qNext" hidden>Next question</button></div>
+    </div>
+    <div class="panel" id="quizDone" hidden style="display:flex;flex-direction:column;gap:12px">
+      <span class="score num" id="qFinal">0/10</span>
+      <p id="qVerdict" style="margin:0"></p>
+      <div id="qMisses"></div>
+      <div class="row"><button class="btn primary" id="qAgain" data-i="try_again">Try again</button><button class="btn" id="qOther" data-i="other_deck">Pick another deck</button></div>
+    </div>
+  </section>
+
+  <!-- ============ FOCUS ============ -->
+  <section class="view" id="v-focus">
+    <div class="head"><div><h1 data-i="nav_focus">Focus timer</h1><p data-i="focus_desc">Work in short blocks with breaks in between. Finished blocks count toward your daily focus minutes.</p></div></div>
+    <div class="panel timer">
+      <div class="ring">
+        <svg width="260" height="260" viewBox="0 0 260 260" aria-hidden="true">
+          <circle cx="130" cy="130" r="115" fill="none" stroke="var(--line)" stroke-width="14"/>
+          <circle id="ringArc" cx="130" cy="130" r="115" fill="none" stroke="var(--accent)" stroke-width="14" stroke-linecap="round" stroke-dasharray="722.57" stroke-dashoffset="0"/>
+        </svg>
+        <div class="clock"><span class="t" id="tLeft">25:00</span><span class="m" id="tMode">Focus</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="row"><button class="btn primary" id="tStart">Start</button><button class="btn" id="tReset" data-i="reset">Reset</button><button class="btn" id="tSkip">Skip to break</button></div>
+        <div><h3 style="margin-bottom:8px" data-i="block_len">Block length</h3><div class="presets" id="presets"></div></div>
+        <div><h3 style="margin-bottom:8px" data-i="todays_blocks">Today's blocks</h3><div class="sessions" id="sessions"></div></div>
+        <label for="focusTask"><span data-i="working_on">What are you working on?</span><input type="text" id="focusTask" data-iph="working_ph" placeholder="e.g. chapter 4 reading"></label>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ NOTES ============ -->
+  <section class="view" id="v-notes">
+    <div class="head"><div><h1 data-i="nav_notes">Notes</h1><p data-i="notes_desc">Quick notes for class. They save as you type.</p></div><button class="btn primary" id="newNote" data-i="new_note">New note</button></div>
+    <div class="notes">
+      <div class="panel notelist" id="noteList"></div>
+      <div class="panel editor" id="noteEditor">
+        <input type="text" id="noteTitle" aria-label="Note title" data-iph="title_ph" placeholder="Title">
+        <textarea id="noteBody" aria-label="Note text" data-iph="body_ph" placeholder="Start writing…"></textarea>
+        <div class="row" style="justify-content:space-between"><span class="meta" id="noteMeta"></span><button class="btn ghost" id="delNote" data-i="delete_note">Delete note</button></div>
+      </div>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+// =====================================================================
+// Helpers
+// =====================================================================
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Math.random().toString(36).slice(2, 10);
+const today = (d = new Date()) => d.toISOString().slice(0, 10);
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+let toastT;
+function toast(t) { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 2200); }
+const COLORS = ['#2f54eb', '#1c9a5e', '#d2463f', '#b26a00', '#8a3fd1', '#0d8a9e'];
+
+// =====================================================================
+// Languages
+// =====================================================================
+const LANGS = { en: 'English', el: 'Ελληνικά', es: 'Español', fr: 'Français', de: 'Deutsch' };
+const LANG_EN = { en: 'English', el: 'Greek', es: 'Spanish', fr: 'French', de: 'German' };
+const I18N = {
+en: {
+books_grade:'Official {g} textbooks (ebooks.edu.gr)',find_book:'Find the {s} book on ebooks.edu.gr',units_chapters:'{u} units · {c} chapters',made_n:'{n} made',make_unit:'Make the whole unit',own_chapters:'Your own chapter',own_ph:'Chapter title from your book',add_chapter:'Add & make cards',queued:'Waiting…',unit_started:'Making cards for each chapter, one by one…',unit_done:'All chapters are ready',by_grade:'By grade',by_grade_desc:'Choose your class to see its subjects and chapters.',basics:'Basics for every subject',pick_grade:'Pick your class above.',grade_hint:'Open a subject to see the whole year in units. Tap a chapter (or “Make the whole unit”) and Claude writes flashcards at your class level. Chapters you made show ✓.',grade_no_ai:'Making chapter cards needs Claude: open this page in Claude to use it.',make:'Make cards',making:'Writing…',topic_ready:'{n} cards ready — start studying!',nav_subjects:'Subjects',subjects_desc:'Ready-made decks for every school subject. Study them as flashcards or test yourself with a quiz.',add_subject:'Add to my decks',add_all:'Add all subjects',all_added:'All subjects added',n_cards:'{n} cards',pct_mastered:'{p}% mastered',subj_added:'Added: {s}',nav_home:'Dashboard',nav_cards:'Flashcards',nav_quiz:'Quiz',nav_focus:'Focus timer',nav_notes:'Notes',
+sync_local:'Saved on this device',sync_account:'Saved to your account',sync_wait:'Can\'t reach your account yet — saved on this device',sync_full:'Account storage is full — saved on this device',
+hello_m:'Good morning! Ready to study?',hello_a:'Good afternoon! Ready to study?',hello_e:'Good evening! Ready to study?',hello_sub:'Pick a deck, run a quiz, or start a focus session.',
+btn_study_cards:'Study flashcards',btn_start_focus:'Start focus timer',t_streak:'Study streak',t_streak_sub:'days in a row',t_cards:'Cards today',t_cards_sub:'reviewed',t_focus:'Focus today',t_focus_sub:'minutes',
+t_quiz:'Quiz average',t_quiz_none:'no quizzes yet',quiz_count:'quizzes taken: {n}',chart_title:'Last 7 days',chart_sub:'cards reviewed per day',today:'Today',
+decks_title:'Your decks',mastery:'mastery',deck_meta:'{n} cards · {p}% mastered',btn_study:'Study',btn_quiz:'Quiz',no_decks:'No decks yet. Make one in Flashcards.',
+cards_desc:'Flip the card, then tell the desk whether you knew it. Cards you miss come back sooner.',edit_deck:'Edit deck',back_study:'Back to studying',new_deck:'New deck',
+question:'question',answer:'Answer',empty_deck_q:'This deck has no cards yet',empty_deck_a:'Press "Edit deck" to add some.',no_deck_q:'Make your first deck',box:'Box {n} of 5',
+didnt_know:'Didn\'t know',flip:'Flip',knew_it:'Knew it',session:'This session: {r} of {n} known',cards_in_deck:'Cards in this deck',delete_deck:'Delete deck',click_again:'Click again to delete',
+deck_name:'Deck name',add_card_title:'Add a card',q_or_term:'Question or term',add_card:'Add card',card_added:'Card added',no_cards_table:'No cards yet — add one, paste a list, or let Claude write some.',
+ai_title:'Make cards with Claude',topic:'Topic',topic_ph:'e.g. the water cycle, French food words, key dates of WW2',how_many:'How many',write_cards:'Write cards',ai_need_topic:'Type a topic first.',
+ai_working:'Claude is writing your cards…',ai_done:'Added {n} cards about {t}. Check them over — Claude can make mistakes.',ai_na:'Claude isn\'t available on this page.',ai_rate:'Too many requests — wait a minute and try again.',ai_fail:'Couldn\'t make cards that time. Try a clearer topic.',
+paste_title:'Paste a list',paste_help:'One card per line, question and answer separated by a dash, colon or tab:',import:'Import cards',imported:'Imported {n} cards',import_none:'No cards found — use "term - answer" on each line',
+deck_deleted:'Deck deleted',untitled_deck:'Untitled deck',quiz_desc:'Ten multiple-choice questions from one of your decks.',choose_deck:'Choose a deck',start_quiz:'Start quiz',quiz_make_deck:'Make a deck first.',
+quiz_n:'{n} questions',quiz_need2:'This deck needs at least 2 cards.',q_of:'Question {i} of {n}',correct:'{n} correct',next_q:'Next question',see_score:'See my score',
+v100:'<mark>Perfect score.</mark> You know this deck.',v80:'<mark>Great work.</mark> Review the few you missed below.',v50:'Good start. Study the missed cards, then try again.',v0:'Keep going: flip through the flashcards first, then retry the quiz.',
+to_review:'To review',you_picked:'You picked:',try_again:'Try again',other_deck:'Pick another deck',
+focus_desc:'Work in short blocks with breaks in between. Finished blocks count toward your daily focus minutes.',start:'Start',pause:'Pause',resume:'Resume',reset:'Reset',skip_break:'Skip to break',skip_brk2:'Skip break',
+mode_focus:'Focus',mode_break:'Break',block_len:'Block length',preset:'{w} min + {b} break',todays_blocks:'Today\'s blocks',working_on:'What are you working on?',working_ph:'e.g. chapter 4 reading',
+block_done:'Block done — take a break',break_over:'Break over — back to work',notes_desc:'Quick notes for class. They save as you type.',new_note:'New note',delete_note:'Delete note',
+title_ph:'Title',body_ph:'Start writing…',untitled:'Untitled',no_notes:'No notes yet.',words_saved:'{n} words · saved',lang_set:'Language: English'},
+el: {
+books_grade:'Τα σχολικά βιβλία της {g} (ebooks.edu.gr)',find_book:'Βρες το βιβλίο «{s}» στο ebooks.edu.gr',units_chapters:'{u} ενότητες · {c} κεφάλαια',made_n:'{n} έτοιμα',make_unit:'Φτιάξε όλη την ενότητα',own_chapters:'Δικό σου κεφάλαιο',own_ph:'Τίτλος κεφαλαίου από το βιβλίο σου',add_chapter:'Πρόσθεσε & φτιάξε κάρτες',queued:'Σε αναμονή…',unit_started:'Φτιάχνω κάρτες για κάθε κεφάλαιο, ένα-ένα…',unit_done:'Όλα τα κεφάλαια είναι έτοιμα',by_grade:'Ανά τάξη',by_grade_desc:'Διάλεξε την τάξη σου για να δεις τα μαθήματα και τα κεφάλαιά της.',basics:'Βασικά για κάθε μάθημα',pick_grade:'Διάλεξε την τάξη σου παραπάνω.',grade_hint:'Άνοιξε ένα μάθημα για να δεις όλη την ύλη της χρονιάς σε ενότητες. Πάτα ένα κεφάλαιο (ή «Φτιάξε όλη την ενότητα») και ο Claude γράφει κάρτες στο επίπεδο της τάξης σου. Όσα έχεις φτιάξει έχουν ✓.',grade_no_ai:'Για κάρτες ανά κεφάλαιο χρειάζεται ο Claude: άνοιξε τη σελίδα μέσα από το Claude.',make:'Φτιάξε κάρτες',making:'Γράφει…',topic_ready:'Έτοιμες {n} κάρτες — ξεκίνα τη μελέτη!',nav_subjects:'Μαθήματα',subjects_desc:'Έτοιμες τράπουλες για κάθε μάθημα του σχολείου. Μελέτησέ τες με κάρτες ή τεστάρισε τον εαυτό σου με κουίζ.',add_subject:'Πρόσθεσε στις τράπουλές μου',add_all:'Πρόσθεσε όλα τα μαθήματα',all_added:'Προστέθηκαν όλα τα μαθήματα',n_cards:'{n} κάρτες',pct_mastered:'{p}% κατακτημένες',subj_added:'Προστέθηκε: {s}',nav_home:'Αρχική',nav_cards:'Κάρτες',nav_quiz:'Κουίζ',nav_focus:'Χρονόμετρο',nav_notes:'Σημειώσεις',
+sync_local:'Αποθηκεύτηκε σε αυτή τη συσκευή',sync_account:'Αποθηκεύτηκε στον λογαριασμό σου',sync_wait:'Ο λογαριασμός δεν απαντά ακόμα — αποθηκεύτηκε σε αυτή τη συσκευή',sync_full:'Ο χώρος του λογαριασμού γέμισε — αποθηκεύτηκε σε αυτή τη συσκευή',
+hello_m:'Καλημέρα! Έτοιμος για διάβασμα;',hello_a:'Καλό απόγευμα! Έτοιμος για διάβασμα;',hello_e:'Καλησπέρα! Έτοιμος για διάβασμα;',hello_sub:'Διάλεξε τράπουλα, κάνε ένα κουίζ ή ξεκίνα μια συνεδρία συγκέντρωσης.',
+btn_study_cards:'Μελέτη με κάρτες',btn_start_focus:'Ξεκίνα το χρονόμετρο',t_streak:'Σερί μελέτης',t_streak_sub:'μέρες στη σειρά',t_cards:'Κάρτες σήμερα',t_cards_sub:'επαναλήψεις',t_focus:'Συγκέντρωση σήμερα',t_focus_sub:'λεπτά',
+t_quiz:'Μέσος όρος κουίζ',t_quiz_none:'κανένα κουίζ ακόμα',quiz_count:'κουίζ: {n}',chart_title:'Τελευταίες 7 μέρες',chart_sub:'κάρτες ανά μέρα',today:'Σήμερα',
+decks_title:'Οι τράπουλές σου',mastery:'εξοικείωση',deck_meta:'{n} κάρτες · {p}% κατακτημένες',btn_study:'Μελέτη',btn_quiz:'Κουίζ',no_decks:'Δεν έχεις τράπουλες ακόμα. Φτιάξε μία στις Κάρτες.',
+cards_desc:'Γύρνα την κάρτα και πες αν την ήξερες. Όσες δεν ήξερες ξαναέρχονται πιο σύντομα.',edit_deck:'Επεξεργασία',back_study:'Πίσω στη μελέτη',new_deck:'Νέα τράπουλα',
+question:'ερώτηση',answer:'Απάντηση',empty_deck_q:'Αυτή η τράπουλα δεν έχει κάρτες ακόμα',empty_deck_a:'Πάτα «Επεξεργασία» για να προσθέσεις.',no_deck_q:'Φτιάξε την πρώτη σου τράπουλα',box:'Κουτί {n} από 5',
+didnt_know:'Δεν το ήξερα',flip:'Γύρνα',knew_it:'Το ήξερα',session:'Αυτή τη φορά: {r} από {n} σωστά',cards_in_deck:'Κάρτες της τράπουλας',delete_deck:'Διαγραφή τράπουλας',click_again:'Πάτα ξανά για διαγραφή',
+deck_name:'Όνομα τράπουλας',add_card_title:'Πρόσθεσε κάρτα',q_or_term:'Ερώτηση ή όρος',add_card:'Προσθήκη κάρτας',card_added:'Η κάρτα προστέθηκε',no_cards_table:'Καμία κάρτα ακόμα — πρόσθεσε μία, επικόλλησε λίστα ή άσε τον Claude να γράψει.',
+ai_title:'Φτιάξε κάρτες με τον Claude',topic:'Θέμα',topic_ph:'π.χ. ο κύκλος του νερού, λέξεις για φαγητό στα γαλλικά, ημερομηνίες του Β΄ Παγκοσμίου',how_many:'Πόσες',write_cards:'Γράψε κάρτες',ai_need_topic:'Γράψε πρώτα ένα θέμα.',
+ai_working:'Ο Claude γράφει τις κάρτες σου…',ai_done:'Προστέθηκαν {n} κάρτες για: {t}. Έλεγξέ τες — ο Claude μπορεί να κάνει λάθη.',ai_na:'Ο Claude δεν είναι διαθέσιμος σε αυτή τη σελίδα.',ai_rate:'Πάρα πολλά αιτήματα — περίμενε ένα λεπτό και ξαναδοκίμασε.',ai_fail:'Δεν έγιναν οι κάρτες αυτή τη φορά. Δοκίμασε πιο ξεκάθαρο θέμα.',
+paste_title:'Επικόλληση λίστας',paste_help:'Μία κάρτα ανά γραμμή, ερώτηση και απάντηση χωρισμένες με παύλα, άνω-κάτω τελεία ή tab:',import:'Εισαγωγή καρτών',imported:'Εισήχθησαν {n} κάρτες',import_none:'Δεν βρέθηκαν κάρτες — γράψε «όρος - απάντηση» σε κάθε γραμμή',
+deck_deleted:'Η τράπουλα διαγράφηκε',untitled_deck:'Τράπουλα χωρίς όνομα',quiz_desc:'Δέκα ερωτήσεις πολλαπλής επιλογής από μια τράπουλά σου.',choose_deck:'Διάλεξε τράπουλα',start_quiz:'Ξεκίνα το κουίζ',quiz_make_deck:'Φτιάξε πρώτα μια τράπουλα.',
+quiz_n:'{n} ερωτήσεις',quiz_need2:'Η τράπουλα χρειάζεται τουλάχιστον 2 κάρτες.',q_of:'Ερώτηση {i} από {n}',correct:'{n} σωστές',next_q:'Επόμενη ερώτηση',see_score:'Δες τη βαθμολογία',
+v100:'<mark>Τέλεια!</mark> Ξέρεις αυτή την τράπουλα.',v80:'<mark>Μπράβο!</mark> Κάνε επανάληψη στις λίγες που έχασες.',v50:'Καλή αρχή. Μελέτησε όσες έχασες και ξαναπροσπάθησε.',v0:'Συνέχισε: πέρασε πρώτα τις κάρτες και μετά ξανακάνε το κουίζ.',
+to_review:'Για επανάληψη',you_picked:'Διάλεξες:',try_again:'Ξανά',other_deck:'Άλλη τράπουλα',
+focus_desc:'Δούλεψε σε μικρά διαστήματα με διαλείμματα ανάμεσα. Όσα ολοκληρώνεις μετράνε στα λεπτά συγκέντρωσης.',start:'Έναρξη',pause:'Παύση',resume:'Συνέχεια',reset:'Επαναφορά',skip_break:'Πήγαινε στο διάλειμμα',skip_brk2:'Τέλος διαλείμματος',
+mode_focus:'Συγκέντρωση',mode_break:'Διάλειμμα',block_len:'Διάρκεια',preset:'{w} λεπτά + {b} διάλειμμα',todays_blocks:'Σημερινά διαστήματα',working_on:'Με τι ασχολείσαι;',working_ph:'π.χ. διάβασμα κεφαλαίου 4',
+block_done:'Τέλος διαστήματος — κάνε διάλειμμα',break_over:'Τέλος διαλείμματος — πίσω στη δουλειά',notes_desc:'Γρήγορες σημειώσεις για το μάθημα. Αποθηκεύονται καθώς γράφεις.',new_note:'Νέα σημείωση',delete_note:'Διαγραφή σημείωσης',
+title_ph:'Τίτλος',body_ph:'Ξεκίνα να γράφεις…',untitled:'Χωρίς τίτλο',no_notes:'Καμία σημείωση ακόμα.',words_saved:'{n} λέξεις · αποθηκεύτηκε',lang_set:'Γλώσσα: Ελληνικά'},
+es: {
+books_grade:'Libros oficiales de {g} (ebooks.edu.gr)',find_book:'Buscar el libro de {s} en ebooks.edu.gr',units_chapters:'{u} unidades · {c} temas',made_n:'{n} hechos',make_unit:'Crear toda la unidad',own_chapters:'Tu propio tema',own_ph:'Título del tema en tu libro',add_chapter:'Añadir y crear tarjetas',queued:'En espera…',unit_started:'Creando tarjetas para cada tema, uno a uno…',unit_done:'Todos los temas están listos',by_grade:'Por curso',by_grade_desc:'Elige tu curso para ver sus asignaturas y temas.',basics:'Lo básico de cada asignatura',pick_grade:'Elige tu curso arriba.',grade_hint:'Toca un tema: Claude escribe 10 tarjetas a tu nivel. Los temas ya creados muestran ✓.',grade_no_ai:'Para crear tarjetas por tema hace falta Claude: abre esta página en Claude.',make:'Crear tarjetas',making:'Escribiendo…',topic_ready:'{n} tarjetas listas: ¡a estudiar!',nav_subjects:'Asignaturas',subjects_desc:'Mazos listos para cada asignatura. Estúdialos con tarjetas o ponte a prueba con un quiz.',add_subject:'Añadir a mis mazos',add_all:'Añadir todas',all_added:'Todas añadidas',n_cards:'{n} tarjetas',pct_mastered:'{p}% dominadas',subj_added:'Añadido: {s}',nav_home:'Inicio',nav_cards:'Tarjetas',nav_quiz:'Prueba',nav_focus:'Temporizador',nav_notes:'Notas',
+sync_local:'Guardado en este dispositivo',sync_account:'Guardado en tu cuenta',sync_wait:'Aún no se puede acceder a tu cuenta — guardado en este dispositivo',sync_full:'Tu cuenta está llena — guardado en este dispositivo',
+hello_m:'¡Buenos días! ¿Listo para estudiar?',hello_a:'¡Buenas tardes! ¿Listo para estudiar?',hello_e:'¡Buenas noches! ¿Listo para estudiar?',hello_sub:'Elige un mazo, haz una prueba o empieza una sesión de concentración.',
+btn_study_cards:'Estudiar tarjetas',btn_start_focus:'Iniciar temporizador',t_streak:'Racha de estudio',t_streak_sub:'días seguidos',t_cards:'Tarjetas hoy',t_cards_sub:'repasadas',t_focus:'Concentración hoy',t_focus_sub:'minutos',
+t_quiz:'Media de pruebas',t_quiz_none:'aún no hay pruebas',quiz_count:'pruebas hechas: {n}',chart_title:'Últimos 7 días',chart_sub:'tarjetas repasadas por día',today:'Hoy',
+decks_title:'Tus mazos',mastery:'dominio',deck_meta:'{n} tarjetas · {p}% dominadas',btn_study:'Estudiar',btn_quiz:'Prueba',no_decks:'Aún no tienes mazos. Crea uno en Tarjetas.',
+cards_desc:'Gira la tarjeta y di si la sabías. Las que fallas vuelven antes.',edit_deck:'Editar mazo',back_study:'Volver a estudiar',new_deck:'Nuevo mazo',
+question:'pregunta',answer:'Respuesta',empty_deck_q:'Este mazo aún no tiene tarjetas',empty_deck_a:'Pulsa «Editar mazo» para añadir algunas.',no_deck_q:'Crea tu primer mazo',box:'Caja {n} de 5',
+didnt_know:'No la sabía',flip:'Girar',knew_it:'La sabía',session:'Esta sesión: {r} de {n} acertadas',cards_in_deck:'Tarjetas de este mazo',delete_deck:'Eliminar mazo',click_again:'Pulsa otra vez para eliminar',
+deck_name:'Nombre del mazo',add_card_title:'Añadir una tarjeta',q_or_term:'Pregunta o término',add_card:'Añadir tarjeta',card_added:'Tarjeta añadida',no_cards_table:'Aún no hay tarjetas: añade una, pega una lista o deja que Claude escriba algunas.',
+ai_title:'Crear tarjetas con Claude',topic:'Tema',topic_ph:'p. ej. el ciclo del agua, comida en francés, fechas clave de la Segunda Guerra Mundial',how_many:'Cuántas',write_cards:'Escribir tarjetas',ai_need_topic:'Escribe un tema primero.',
+ai_working:'Claude está escribiendo tus tarjetas…',ai_done:'Se añadieron {n} tarjetas sobre {t}. Revísalas: Claude puede equivocarse.',ai_na:'Claude no está disponible en esta página.',ai_rate:'Demasiadas solicitudes: espera un minuto y vuelve a intentarlo.',ai_fail:'No se pudieron crear las tarjetas. Prueba con un tema más claro.',
+paste_title:'Pegar una lista',paste_help:'Una tarjeta por línea, con pregunta y respuesta separadas por guion, dos puntos o tabulador:',import:'Importar tarjetas',imported:'Se importaron {n} tarjetas',import_none:'No se encontraron tarjetas: usa «término - respuesta» en cada línea',
+deck_deleted:'Mazo eliminado',untitled_deck:'Mazo sin nombre',quiz_desc:'Diez preguntas de opción múltiple de uno de tus mazos.',choose_deck:'Elige un mazo',start_quiz:'Empezar prueba',quiz_make_deck:'Crea un mazo primero.',
+quiz_n:'{n} preguntas',quiz_need2:'Este mazo necesita al menos 2 tarjetas.',q_of:'Pregunta {i} de {n}',correct:'{n} correctas',next_q:'Siguiente pregunta',see_score:'Ver mi nota',
+v100:'<mark>¡Perfecto!</mark> Te sabes este mazo.',v80:'<mark>¡Muy bien!</mark> Repasa abajo las pocas que fallaste.',v50:'Buen comienzo. Estudia las que fallaste y vuelve a intentarlo.',v0:'Sigue así: repasa primero las tarjetas y luego repite la prueba.',
+to_review:'Para repasar',you_picked:'Elegiste:',try_again:'Otra vez',other_deck:'Elegir otro mazo',
+focus_desc:'Trabaja en bloques cortos con descansos entre ellos. Los bloques terminados suman a tus minutos de concentración.',start:'Empezar',pause:'Pausa',resume:'Seguir',reset:'Reiniciar',skip_break:'Saltar al descanso',skip_brk2:'Saltar descanso',
+mode_focus:'Concentración',mode_break:'Descanso',block_len:'Duración del bloque',preset:'{w} min + {b} de descanso',todays_blocks:'Bloques de hoy',working_on:'¿En qué estás trabajando?',working_ph:'p. ej. leer el capítulo 4',
+block_done:'Bloque terminado: tómate un descanso',break_over:'Fin del descanso: a trabajar',notes_desc:'Notas rápidas para clase. Se guardan mientras escribes.',new_note:'Nueva nota',delete_note:'Eliminar nota',
+title_ph:'Título',body_ph:'Empieza a escribir…',untitled:'Sin título',no_notes:'Aún no hay notas.',words_saved:'{n} palabras · guardado',lang_set:'Idioma: Español'},
+fr: {
+books_grade:'Manuels officiels de {g} (ebooks.edu.gr)',find_book:'Trouver le manuel de {s} sur ebooks.edu.gr',units_chapters:'{u} unités · {c} chapitres',made_n:'{n} prêts',make_unit:'Créer toute l\'unité',own_chapters:'Ton propre chapitre',own_ph:'Titre du chapitre dans ton livre',add_chapter:'Ajouter et créer',queued:'En attente…',unit_started:'Création des cartes chapitre par chapitre…',unit_done:'Tous les chapitres sont prêts',by_grade:'Par classe',by_grade_desc:'Choisis ta classe pour voir ses matières et ses chapitres.',basics:'Les bases de chaque matière',pick_grade:'Choisis ta classe ci-dessus.',grade_hint:'Touche un chapitre : Claude écrit 10 cartes à ton niveau. Les chapitres déjà créés affichent ✓.',grade_no_ai:'Créer des cartes par chapitre nécessite Claude : ouvre cette page dans Claude.',make:'Créer les cartes',making:'Écriture…',topic_ready:'{n} cartes prêtes, au travail !',nav_subjects:'Matières',subjects_desc:'Des paquets prêts pour chaque matière. Révise-les avec les cartes ou teste-toi avec un quiz.',add_subject:'Ajouter à mes paquets',add_all:'Ajouter toutes les matières',all_added:'Toutes les matières ajoutées',n_cards:'{n} cartes',pct_mastered:'{p} % maîtrisées',subj_added:'Ajouté : {s}',nav_home:'Tableau de bord',nav_cards:'Cartes',nav_quiz:'Quiz',nav_focus:'Minuteur',nav_notes:'Notes',
+sync_local:'Enregistré sur cet appareil',sync_account:'Enregistré sur ton compte',sync_wait:'Compte pas encore joignable — enregistré sur cet appareil',sync_full:'L\'espace du compte est plein — enregistré sur cet appareil',
+hello_m:'Bonjour ! Prêt à réviser ?',hello_a:'Bon après-midi ! Prêt à réviser ?',hello_e:'Bonsoir ! Prêt à réviser ?',hello_sub:'Choisis un paquet, lance un quiz ou démarre une séance de concentration.',
+btn_study_cards:'Réviser les cartes',btn_start_focus:'Lancer le minuteur',t_streak:'Série de révision',t_streak_sub:'jours d\'affilée',t_cards:'Cartes aujourd\'hui',t_cards_sub:'révisées',t_focus:'Concentration aujourd\'hui',t_focus_sub:'minutes',
+t_quiz:'Moyenne aux quiz',t_quiz_none:'aucun quiz pour l\'instant',quiz_count:'quiz faits : {n}',chart_title:'7 derniers jours',chart_sub:'cartes révisées par jour',today:'Auj.',
+decks_title:'Tes paquets',mastery:'maîtrise',deck_meta:'{n} cartes · {p} % maîtrisées',btn_study:'Réviser',btn_quiz:'Quiz',no_decks:'Aucun paquet pour l\'instant. Crée-en un dans Cartes.',
+cards_desc:'Retourne la carte, puis dis si tu la connaissais. Les cartes ratées reviennent plus vite.',edit_deck:'Modifier le paquet',back_study:'Retour aux révisions',new_deck:'Nouveau paquet',
+question:'question',answer:'Réponse',empty_deck_q:'Ce paquet n\'a pas encore de cartes',empty_deck_a:'Appuie sur « Modifier le paquet » pour en ajouter.',no_deck_q:'Crée ton premier paquet',box:'Boîte {n} sur 5',
+didnt_know:'Je ne savais pas',flip:'Retourner',knew_it:'Je savais',session:'Cette séance : {r} sur {n} connues',cards_in_deck:'Cartes de ce paquet',delete_deck:'Supprimer le paquet',click_again:'Clique encore pour supprimer',
+deck_name:'Nom du paquet',add_card_title:'Ajouter une carte',q_or_term:'Question ou terme',add_card:'Ajouter la carte',card_added:'Carte ajoutée',no_cards_table:'Pas encore de cartes : ajoutes-en une, colle une liste ou laisse Claude en écrire.',
+ai_title:'Créer des cartes avec Claude',topic:'Sujet',topic_ph:'ex. le cycle de l\'eau, la nourriture en espagnol, les dates clés de 39-45',how_many:'Combien',write_cards:'Écrire les cartes',ai_need_topic:'Écris d\'abord un sujet.',
+ai_working:'Claude écrit tes cartes…',ai_done:'{n} cartes ajoutées sur {t}. Vérifie-les : Claude peut se tromper.',ai_na:'Claude n\'est pas disponible sur cette page.',ai_rate:'Trop de demandes : attends une minute et réessaie.',ai_fail:'Impossible de créer les cartes cette fois. Essaie un sujet plus précis.',
+paste_title:'Coller une liste',paste_help:'Une carte par ligne, question et réponse séparées par un tiret, deux-points ou une tabulation :',import:'Importer les cartes',imported:'{n} cartes importées',import_none:'Aucune carte trouvée : écris « terme - réponse » sur chaque ligne',
+deck_deleted:'Paquet supprimé',untitled_deck:'Paquet sans nom',quiz_desc:'Dix questions à choix multiples tirées d\'un de tes paquets.',choose_deck:'Choisis un paquet',start_quiz:'Commencer le quiz',quiz_make_deck:'Crée d\'abord un paquet.',
+quiz_n:'{n} questions',quiz_need2:'Ce paquet doit avoir au moins 2 cartes.',q_of:'Question {i} sur {n}',correct:'{n} bonnes réponses',next_q:'Question suivante',see_score:'Voir mon score',
+v100:'<mark>Score parfait.</mark> Tu connais ce paquet.',v80:'<mark>Très bien.</mark> Revois les quelques erreurs ci-dessous.',v50:'Bon début. Révise les cartes ratées, puis réessaie.',v0:'Continue : révise d\'abord les cartes, puis refais le quiz.',
+to_review:'À revoir',you_picked:'Ta réponse :',try_again:'Réessayer',other_deck:'Choisir un autre paquet',
+focus_desc:'Travaille par courtes sessions avec des pauses entre elles. Les sessions terminées comptent dans tes minutes de concentration.',start:'Démarrer',pause:'Pause',resume:'Reprendre',reset:'Réinitialiser',skip_break:'Passer à la pause',skip_brk2:'Passer la pause',
+mode_focus:'Concentration',mode_break:'Pause',block_len:'Durée des sessions',preset:'{w} min + {b} de pause',todays_blocks:'Sessions du jour',working_on:'Sur quoi travailles-tu ?',working_ph:'ex. lecture du chapitre 4',
+block_done:'Session terminée : fais une pause',break_over:'Fin de la pause : au travail',notes_desc:'Des notes rapides pour les cours. Elles s\'enregistrent pendant que tu écris.',new_note:'Nouvelle note',delete_note:'Supprimer la note',
+title_ph:'Titre',body_ph:'Commence à écrire…',untitled:'Sans titre',no_notes:'Aucune note pour l\'instant.',words_saved:'{n} mots · enregistré',lang_set:'Langue : Français'},
+de: {
+books_grade:'Offizielle Schulbücher {g} (ebooks.edu.gr)',find_book:'Buch für {s} auf ebooks.edu.gr finden',units_chapters:'{u} Einheiten · {c} Kapitel',made_n:'{n} fertig',make_unit:'Ganze Einheit erstellen',own_chapters:'Eigenes Kapitel',own_ph:'Kapiteltitel aus deinem Buch',add_chapter:'Hinzufügen & erstellen',queued:'Wartet…',unit_started:'Karten werden Kapitel für Kapitel erstellt…',unit_done:'Alle Kapitel sind fertig',by_grade:'Nach Klasse',by_grade_desc:'Wähle deine Klasse, um ihre Fächer und Kapitel zu sehen.',basics:'Grundlagen für jedes Fach',pick_grade:'Wähle oben deine Klasse.',grade_hint:'Tippe auf ein Kapitel: Claude schreibt 10 Karten auf deinem Niveau. Bereits erstellte Kapitel zeigen ✓.',grade_no_ai:'Für Karten pro Kapitel braucht es Claude: Öffne diese Seite in Claude.',make:'Karten erstellen',making:'Schreibt…',topic_ready:'{n} Karten fertig – los geht\'s!',nav_subjects:'Fächer',subjects_desc:'Fertige Stapel für jedes Schulfach. Lerne sie mit Karteikarten oder teste dich mit einem Quiz.',add_subject:'Zu meinen Stapeln',add_all:'Alle Fächer hinzufügen',all_added:'Alle Fächer hinzugefügt',n_cards:'{n} Karten',pct_mastered:'{p} % beherrscht',subj_added:'Hinzugefügt: {s}',nav_home:'Übersicht',nav_cards:'Karteikarten',nav_quiz:'Quiz',nav_focus:'Fokus-Timer',nav_notes:'Notizen',
+sync_local:'Auf diesem Gerät gespeichert',sync_account:'In deinem Konto gespeichert',sync_wait:'Konto noch nicht erreichbar – auf diesem Gerät gespeichert',sync_full:'Kontospeicher ist voll – auf diesem Gerät gespeichert',
+hello_m:'Guten Morgen! Bereit zum Lernen?',hello_a:'Guten Tag! Bereit zum Lernen?',hello_e:'Guten Abend! Bereit zum Lernen?',hello_sub:'Wähle einen Stapel, mach ein Quiz oder starte eine Fokus-Einheit.',
+btn_study_cards:'Karteikarten lernen',btn_start_focus:'Fokus-Timer starten',t_streak:'Lernserie',t_streak_sub:'Tage am Stück',t_cards:'Karten heute',t_cards_sub:'wiederholt',t_focus:'Fokus heute',t_focus_sub:'Minuten',
+t_quiz:'Quiz-Durchschnitt',t_quiz_none:'noch keine Quizze',quiz_count:'Quizze: {n}',chart_title:'Letzte 7 Tage',chart_sub:'wiederholte Karten pro Tag',today:'Heute',
+decks_title:'Deine Stapel',mastery:'beherrscht',deck_meta:'{n} Karten · {p} % beherrscht',btn_study:'Lernen',btn_quiz:'Quiz',no_decks:'Noch keine Stapel. Erstelle einen unter Karteikarten.',
+cards_desc:'Dreh die Karte um und sag, ob du sie wusstest. Karten, die du nicht wusstest, kommen früher wieder.',edit_deck:'Stapel bearbeiten',back_study:'Zurück zum Lernen',new_deck:'Neuer Stapel',
+question:'Frage',answer:'Antwort',empty_deck_q:'Dieser Stapel hat noch keine Karten',empty_deck_a:'Tippe auf „Stapel bearbeiten“, um welche hinzuzufügen.',no_deck_q:'Erstelle deinen ersten Stapel',box:'Fach {n} von 5',
+didnt_know:'Wusste ich nicht',flip:'Umdrehen',knew_it:'Wusste ich',session:'Diese Runde: {r} von {n} gewusst',cards_in_deck:'Karten in diesem Stapel',delete_deck:'Stapel löschen',click_again:'Zum Löschen nochmal klicken',
+deck_name:'Name des Stapels',add_card_title:'Karte hinzufügen',q_or_term:'Frage oder Begriff',add_card:'Karte hinzufügen',card_added:'Karte hinzugefügt',no_cards_table:'Noch keine Karten – füge eine hinzu, füge eine Liste ein oder lass Claude welche schreiben.',
+ai_title:'Karten mit Claude erstellen',topic:'Thema',topic_ph:'z. B. der Wasserkreislauf, französische Wörter fürs Essen, Daten des Zweiten Weltkriegs',how_many:'Wie viele',write_cards:'Karten schreiben',ai_need_topic:'Gib zuerst ein Thema ein.',
+ai_working:'Claude schreibt deine Karten …',ai_done:'{n} Karten zu {t} hinzugefügt. Prüfe sie – Claude kann Fehler machen.',ai_na:'Claude ist auf dieser Seite nicht verfügbar.',ai_rate:'Zu viele Anfragen – warte eine Minute und versuch es erneut.',ai_fail:'Das hat diesmal nicht geklappt. Versuch ein klareres Thema.',
+paste_title:'Liste einfügen',paste_help:'Eine Karte pro Zeile, Frage und Antwort getrennt durch Bindestrich, Doppelpunkt oder Tab:',import:'Karten importieren',imported:'{n} Karten importiert',import_none:'Keine Karten gefunden – schreib „Begriff - Antwort“ in jede Zeile',
+deck_deleted:'Stapel gelöscht',untitled_deck:'Unbenannter Stapel',quiz_desc:'Zehn Multiple-Choice-Fragen aus einem deiner Stapel.',choose_deck:'Wähle einen Stapel',start_quiz:'Quiz starten',quiz_make_deck:'Erstelle zuerst einen Stapel.',
+quiz_n:'{n} Fragen',quiz_need2:'Dieser Stapel braucht mindestens 2 Karten.',q_of:'Frage {i} von {n}',correct:'{n} richtig',next_q:'Nächste Frage',see_score:'Ergebnis ansehen',
+v100:'<mark>Volle Punktzahl.</mark> Du kannst diesen Stapel.',v80:'<mark>Sehr gut.</mark> Wiederhole unten die wenigen Fehler.',v50:'Guter Anfang. Lerne die verpassten Karten und versuch es nochmal.',v0:'Bleib dran: Geh zuerst die Karteikarten durch, dann mach das Quiz nochmal.',
+to_review:'Zum Wiederholen',you_picked:'Deine Wahl:',try_again:'Nochmal',other_deck:'Anderen Stapel wählen',
+focus_desc:'Arbeite in kurzen Blöcken mit Pausen dazwischen. Fertige Blöcke zählen zu deinen Fokus-Minuten.',start:'Start',pause:'Pause',resume:'Weiter',reset:'Zurücksetzen',skip_break:'Zur Pause springen',skip_brk2:'Pause überspringen',
+mode_focus:'Fokus',mode_break:'Pause',block_len:'Blocklänge',preset:'{w} Min. + {b} Pause',todays_blocks:'Heutige Blöcke',working_on:'Woran arbeitest du?',working_ph:'z. B. Kapitel 4 lesen',
+block_done:'Block geschafft – mach eine Pause',break_over:'Pause vorbei – weiter geht\'s',notes_desc:'Schnelle Notizen für den Unterricht. Sie speichern sich beim Tippen.',new_note:'Neue Notiz',delete_note:'Notiz löschen',
+title_ph:'Titel',body_ph:'Fang an zu schreiben …',untitled:'Ohne Titel',no_notes:'Noch keine Notizen.',words_saved:'{n} Wörter · gespeichert',lang_set:'Sprache: Deutsch'},
+};
+let LANG = 'en';
+function t(key, vars) {
+  let s = (I18N[LANG] && I18N[LANG][key]) || I18N.en[key] || key;
+  if (vars) for (const k in vars) s = s.split('{' + k + '}').join(vars[k]);
+  return s;
+}
+function applyLang() {
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('[data-i]').forEach(el => { el.textContent = t(el.dataset.i); });
+  document.querySelectorAll('[data-iph]').forEach(el => { el.placeholder = t(el.dataset.iph); });
+  $('langName').textContent = LANGS[LANG];
+  $('langMenu').innerHTML = Object.entries(LANGS).map(([k, name]) =>
+    `<button role="menuitemradio" aria-checked="${k === LANG}" data-lang="${k}" lang="${k}">${name}<small>${k.toUpperCase()}</small></button>`).join('');
+  $('syncTxt').textContent = t(docRef ? 'sync_account' : 'sync_local');
+}
+function setLang(l) {
+  if (!LANGS[l]) return;
+  LANG = l; S.lang = l; save();
+  applyLang(); route(); renderAll();
+  toast(t('lang_set'));
+}
+function toggleLangMenu(open) {
+  const m = $('langMenu'), show = open !== undefined ? open : m.hidden;
+  m.hidden = !show; $('langBtn').setAttribute('aria-expanded', show);
+  if (show) { const cur = m.querySelector('[aria-checked="true"]'); cur && cur.focus(); }
+}
+$('langBtn').addEventListener('click', e => { e.stopPropagation(); toggleLangMenu(); });
+$('langMenu').addEventListener('click', e => { const b = e.target.closest('[data-lang]'); if (b) { toggleLangMenu(false); setLang(b.dataset.lang); $('langBtn').focus(); } });
+document.addEventListener('click', e => { if (!$('langWrap').contains(e.target)) toggleLangMenu(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('langMenu').hidden) { toggleLangMenu(false); $('langBtn').focus(); } });
+const fmtDate = (d, o) => new Date(d).toLocaleDateString(LANG, o);
+
+// =====================================================================
+// Subject library: ready-made decks for every school subject
+// Each card: [question (Greek), answer (Greek), question (English), answer (English)]
+// =====================================================================
+const LIBRARY = [
+ { id: 'math', color: '#2f54eb', mark: 'Σ', name: { el: 'Μαθηματικά', en: 'Mathematics', es: 'Matemáticas', fr: 'Mathématiques', de: 'Mathematik' }, cards: [
+  ['Εμβαδόν κύκλου', 'Ε = π·ρ²', 'Area of a circle', 'A = πr²'],
+  ['Μήκος (περίμετρος) κύκλου', 'L = 2·π·ρ', 'Circumference of a circle', 'C = 2πr'],
+  ['Πυθαγόρειο θεώρημα', 'α² + β² = γ², όπου γ η υποτείνουσα', 'Pythagorean theorem', 'a² + b² = c², where c is the hypotenuse'],
+  ['Άθροισμα γωνιών τριγώνου', '180°', 'Sum of the angles of a triangle', '180°'],
+  ['Εμβαδόν τριγώνου', '(βάση × ύψος) / 2', 'Area of a triangle', '(base × height) / 2'],
+  ['(α + β)²', 'α² + 2αβ + β²', '(a + b)²', 'a² + 2ab + b²'],
+  ['(α − β)(α + β)', 'α² − β²', '(a − b)(a + b)', 'a² − b²'],
+  ['Λύσε: 2x + 6 = 0', 'x = −3', 'Solve: 2x + 6 = 0', 'x = −3'],
+  ['Διακρίνουσα της αx² + βx + γ = 0', 'Δ = β² − 4αγ', 'Discriminant of ax² + bx + c = 0', 'Δ = b² − 4ac'],
+  ['Πρώτος αριθμός', 'Φυσικός μεγαλύτερος του 1 που διαιρείται μόνο με το 1 και τον εαυτό του', 'Prime number', 'A whole number above 1 divisible only by 1 and itself'],
+  ['Όγκος κύβου με πλευρά α', 'V = α³', 'Volume of a cube with side a', 'V = a³'],
+  ['Πόσο είναι το 25% του 80;', '20', 'What is 25% of 80?', '20'],
+ ]},
+ { id: 'physics', color: '#7a3fd1', mark: 'F', name: { el: 'Φυσική', en: 'Physics', es: 'Física', fr: 'Physique', de: 'Physik' }, cards: [
+  ['Ταχύτητα (τύπος)', 'υ = s / t (απόσταση διά χρόνο)', 'Speed (formula)', 'v = s / t (distance over time)'],
+  ['2ος νόμος του Νεύτωνα', 'F = m·α', "Newton's second law", 'F = m·a'],
+  ['Μονάδα δύναμης στο SI', 'Newton (N)', 'SI unit of force', 'Newton (N)'],
+  ['Βάρος σώματος', 'B = m·g, με g ≈ 9,8 m/s²', 'Weight of an object', 'W = m·g, with g ≈ 9.8 m/s²'],
+  ['Νόμος του Ohm', 'V = I·R', "Ohm's law", 'V = I·R'],
+  ['Μονάδα ενέργειας στο SI', 'Joule (J)', 'SI unit of energy', 'Joule (J)'],
+  ['Πυκνότητα', 'ρ = m / V (μάζα διά όγκο)', 'Density', 'ρ = m / V (mass over volume)'],
+  ['Κινητική ενέργεια', 'K = ½·m·υ²', 'Kinetic energy', 'KE = ½·m·v²'],
+  ['Ισχύς', 'P = W / t, μονάδα το Watt (W)', 'Power', 'P = W / t, measured in watts (W)'],
+  ['Ταχύτητα του φωτός στο κενό', 'Περίπου 300.000 km/s', 'Speed of light in a vacuum', 'About 300,000 km/s'],
+  ['1ος νόμος του Νεύτωνα (αδράνεια)', 'Ένα σώμα μένει ακίνητο ή κινείται ευθύγραμμα ομαλά αν η συνολική δύναμη είναι μηδέν', "Newton's first law (inertia)", 'An object stays at rest or keeps moving in a straight line at constant speed unless a net force acts on it'],
+ ]},
+ { id: 'chem', color: '#0d8a9e', mark: 'H', name: { el: 'Χημεία', en: 'Chemistry', es: 'Química', fr: 'Chimie', de: 'Chemie' }, cards: [
+  ['Χημικό σύμβολο του οξυγόνου', 'O', 'Chemical symbol for oxygen', 'O'],
+  ['Χημικό σύμβολο του νατρίου', 'Na', 'Chemical symbol for sodium', 'Na'],
+  ['Χημικό σύμβολο του σιδήρου', 'Fe', 'Chemical symbol for iron', 'Fe'],
+  ['Χημικό σύμβολο του χρυσού', 'Au', 'Chemical symbol for gold', 'Au'],
+  ['Χημικός τύπος του νερού', 'H₂O', 'Chemical formula of water', 'H₂O'],
+  ['Χημικός τύπος του διοξειδίου του άνθρακα', 'CO₂', 'Chemical formula of carbon dioxide', 'CO₂'],
+  ['Μαγειρικό αλάτι', 'NaCl, χλωριούχο νάτριο', 'Table salt', 'NaCl, sodium chloride'],
+  ['pH ουδέτερου διαλύματος', '7', 'pH of a neutral solution', '7'],
+  ['Όξινο διάλυμα', 'Διάλυμα με pH μικρότερο από 7', 'Acidic solution', 'A solution with pH below 7'],
+  ['Ατομικός αριθμός', 'Ο αριθμός των πρωτονίων στον πυρήνα του ατόμου', 'Atomic number', 'The number of protons in the nucleus of an atom'],
+  ['Τα σωματίδια του ατόμου', 'Πρωτόνια (+), νετρόνια (ουδέτερα), ηλεκτρόνια (−)', 'Particles of an atom', 'Protons (+), neutrons (neutral), electrons (−)'],
+ ]},
+ { id: 'bio', color: '#1c9a5e', mark: 'B', name: { el: 'Βιολογία', en: 'Biology', es: 'Biología', fr: 'Biologie', de: 'Biologie' }, cards: [
+  ['Κύτταρο', 'Η μικρότερη μονάδα ζωής', 'Cell', 'The smallest unit of life'],
+  ['Μιτοχόνδρια', 'Παράγουν ενέργεια για το κύτταρο', 'Mitochondria', 'Produce energy for the cell'],
+  ['Πυρήνας του κυττάρου', 'Περιέχει το DNA', 'Cell nucleus', 'Holds the DNA'],
+  ['Φωτοσύνθεση', 'Τα φυτά φτιάχνουν γλυκόζη και οξυγόνο από φως, νερό και CO₂', 'Photosynthesis', 'Plants make glucose and oxygen from light, water and CO₂'],
+  ['Χλωροφύλλη', 'Η πράσινη χρωστική των φυτών που απορροφά το φως', 'Chlorophyll', 'The green pigment in plants that absorbs light'],
+  ['DNA', 'Το γενετικό υλικό που φέρει τις κληρονομικές πληροφορίες', 'DNA', 'The genetic material that carries inherited information'],
+  ['Πόσα χρωμοσώματα έχει ο άνθρωπος;', '46 (23 ζεύγη)', 'How many chromosomes do humans have?', '46 (23 pairs)'],
+  ['Κοιλότητες της ανθρώπινης καρδιάς', '4: δύο κόλποι και δύο κοιλίες', 'Chambers of the human heart', '4: two atria and two ventricles'],
+  ['Ερυθρά αιμοσφαίρια', 'Μεταφέρουν οξυγόνο στο σώμα', 'Red blood cells', 'Carry oxygen around the body'],
+  ['Μεγαλύτερο όργανο του ανθρώπινου σώματος', 'Το δέρμα', 'Largest organ of the human body', 'The skin'],
+ ]},
+ { id: 'history', color: '#b26a00', mark: 'Ι', name: { el: 'Ιστορία', en: 'History', es: 'Historia', fr: 'Histoire', de: 'Geschichte' }, cards: [
+  ['Μάχη του Μαραθώνα', '490 π.Χ.', 'Battle of Marathon', '490 BC'],
+  ['Ναυμαχία της Σαλαμίνας', '480 π.Χ.', 'Battle of Salamis', '480 BC'],
+  ['Πελοποννησιακός Πόλεμος', '431–404 π.Χ., Αθήνα εναντίον Σπάρτης', 'Peloponnesian War', '431–404 BC, Athens against Sparta'],
+  ['Θάνατος του Μεγάλου Αλεξάνδρου', '323 π.Χ., στη Βαβυλώνα', 'Death of Alexander the Great', '323 BC, in Babylon'],
+  ['Άλωση της Κωνσταντινούπολης', '29 Μαΐου 1453', 'Fall of Constantinople', '29 May 1453'],
+  ['Έναρξη της Ελληνικής Επανάστασης', '1821', 'Start of the Greek War of Independence', '1821'],
+  ['Πρώτος κυβερνήτης του ελληνικού κράτους', 'Ιωάννης Καποδίστριας', 'First governor of modern Greece', 'Ioannis Kapodistrias'],
+  ['Πρώτοι σύγχρονοι Ολυμπιακοί Αγώνες', 'Αθήνα, 1896', 'First modern Olympic Games', 'Athens, 1896'],
+  ['Το «ΟΧΙ» της Ελλάδας', '28 Οκτωβρίου 1940', 'Greece says "No" (Ochi Day)', '28 October 1940'],
+  ['Εξέγερση του Πολυτεχνείου', '17 Νοεμβρίου 1973', 'Athens Polytechnic uprising', '17 November 1973'],
+  ['Ένταξη της Ελλάδας στην ΕΟΚ', '1981', 'Greece joins the European Community', '1981'],
+ ]},
+ { id: 'geo', color: '#3a8f3a', mark: 'Γ', name: { el: 'Γεωγραφία', en: 'Geography', es: 'Geografía', fr: 'Géographie', de: 'Geografie' }, cards: [
+  ['Ψηλότερο βουνό της Ελλάδας', 'Ο Όλυμπος (Μύτικας, περίπου 2.918 m)', 'Highest mountain in Greece', 'Mount Olympus (Mytikas, about 2,918 m)'],
+  ['Μεγαλύτερο νησί της Ελλάδας', 'Η Κρήτη', 'Largest Greek island', 'Crete'],
+  ['Πόσες περιφέρειες έχει η Ελλάδα;', '13', 'How many regions does Greece have?', '13'],
+  ['Πρωτεύουσα της Κύπρου', 'Λευκωσία', 'Capital of Cyprus', 'Nicosia'],
+  ['Θάλασσα ανάμεσα σε Ελλάδα και Ιταλία', 'Το Ιόνιο Πέλαγος', 'Sea between Greece and Italy', 'The Ionian Sea'],
+  ['Μεγαλύτερος ωκεανός', 'Ο Ειρηνικός', 'Largest ocean', 'The Pacific'],
+  ['Ψηλότερο βουνό του κόσμου', 'Το Έβερεστ (περίπου 8.849 m)', 'Highest mountain in the world', 'Mount Everest (about 8,849 m)'],
+  ['Μεγαλύτερη χώρα σε έκταση', 'Η Ρωσία', 'Largest country by area', 'Russia'],
+  ['Πόσες ήπειροι υπάρχουν;', '7 (κατά τη συνηθισμένη διαίρεση)', 'How many continents are there?', '7 (in the most common model)'],
+  ['Ισημερινός', 'Νοητός κύκλος που χωρίζει τη Γη σε βόρειο και νότιο ημισφαίριο', 'Equator', 'An imaginary line dividing Earth into the northern and southern hemispheres'],
+ ]},
+ { id: 'lang', color: '#d2463f', mark: 'Α', name: { el: 'Νεοελληνική Γλώσσα', en: 'English Language', es: 'Lengua', fr: 'Langue', de: 'Sprache' }, cardsByLang: {
+  el: [
+   ['Ουσιαστικό', 'Λέξη που ονομάζει πρόσωπο, ζώο, πράγμα ή έννοια'],
+   ['Επίθετο', 'Λέξη που δείχνει μια ιδιότητα του ουσιαστικού'],
+   ['Ρήμα', 'Λέξη που δείχνει ενέργεια ή κατάσταση'],
+   ['Επίρρημα', 'Άκλιτη λέξη που προσδιορίζει ρήμα, επίθετο ή άλλο επίρρημα (π.χ. γρήγορα, εδώ, αύριο)'],
+   ['Υποκείμενο', 'Αυτός που κάνει την ενέργεια του ρήματος'],
+   ['Αντικείμενο', 'Αυτό που δέχεται την ενέργεια του ρήματος'],
+   ['Συνώνυμα', 'Λέξεις με ίδια ή παρόμοια σημασία'],
+   ['Αντώνυμα', 'Λέξεις με αντίθετη σημασία'],
+   ['Μεταφορά (σχήμα λόγου)', 'Μια λέξη χρησιμοποιείται με μεταφορική σημασία, π.χ. «χρυσή καρδιά»'],
+   ['Οι 8 χρόνοι του ρήματος', 'Ενεστώτας, Παρατατικός, Αόριστος, Εξακολουθητικός Μέλλοντας, Στιγμιαίος Μέλλοντας, Παρακείμενος, Υπερσυντέλικος, Συντελεσμένος Μέλλοντας'],
+   ['Δίψηφα σύμφωνα', 'μπ, ντ, γκ, γγ, τσ, τζ'],
+  ],
+  en: [
+   ['Noun', 'A word for a person, place, thing or idea'],
+   ['Adjective', 'A word that describes a noun'],
+   ['Verb', 'A word for an action or a state'],
+   ['Adverb', 'Describes a verb, adjective or another adverb (often ends in -ly)'],
+   ['Subject of a sentence', 'Who or what does the action'],
+   ['Synonyms', 'Words with the same or similar meaning'],
+   ['Antonyms', 'Words with opposite meanings'],
+   ['Simile', 'A comparison using "like" or "as"'],
+   ['Past tense of "go"', 'went'],
+   ['Plural of "child"', 'children'],
+  ]}},
+ { id: 'ancient', color: '#8a5a2b', mark: 'Ω', name: { el: 'Αρχαία Ελληνικά', en: 'Ancient Greek', es: 'Griego antiguo', fr: 'Grec ancien', de: 'Altgriechisch' }, cards: [
+  ['λόγος', 'λέξη, ομιλία, σκέψη, λογική', 'λόγος (logos)', 'word, speech, reason'],
+  ['ἀρετή', 'αρετή, ανδρεία, ηθική τελειότητα', 'ἀρετή (aretē)', 'virtue, excellence'],
+  ['πόλις', 'πόλη, πόλη-κράτος', 'πόλις (polis)', 'city, city-state'],
+  ['ἄνθρωπος', 'άνθρωπος', 'ἄνθρωπος (anthrōpos)', 'human being'],
+  ['ὕδωρ', 'νερό', 'ὕδωρ (hydōr)', 'water'],
+  ['οἶκος / οἰκία', 'σπίτι', 'οἶκος (oikos)', 'house, household'],
+  ['θάλαττα', 'θάλασσα', 'θάλαττα (thalatta)', 'sea'],
+  ['ἵππος', 'άλογο', 'ἵππος (hippos)', 'horse'],
+  ['λέγω', 'λέω, μιλώ', 'λέγω (legō)', 'I say, I speak'],
+  ['ἡμέρα', 'μέρα', 'ἡμέρα (hēmera)', 'day'],
+  ['Τα πνεύματα', 'Ψιλή ( ᾿ ) και δασεία ( ῾ )', 'The two breathing marks', 'Smooth ( ᾿ ) and rough ( ῾ )'],
+ ]},
+ { id: 'foreign', color: '#c2185b', mark: 'E', name: { el: 'Αγγλικά', en: 'Greek words', es: 'Palabras griegas', fr: 'Mots grecs', de: 'Griechische Wörter' }, cardsByLang: {
+  el: [
+   ['library', 'βιβλιοθήκη'], ['although', 'παρόλο που'], ['weather', 'καιρός'], ['to borrow', 'δανείζομαι'],
+   ['knowledge', 'γνώση'], ['environment', 'περιβάλλον'], ['comfortable', 'άνετος'],
+   ['Past simple του "buy"', 'bought'], ['Past simple του "write"', 'wrote'], ['"I have finished" — ποιος χρόνος;', 'Present Perfect'],
+  ],
+  en: [
+   ['Καλημέρα', 'Good morning'], ['Ευχαριστώ', 'Thank you'], ['Παρακαλώ', 'Please / You\'re welcome'], ['Ναι', 'Yes'], ['Όχι', 'No'],
+   ['Νερό', 'Water'], ['Σχολείο', 'School'], ['Φίλος', 'Friend'], ['Βιβλίο', 'Book'], ['Αντίο', 'Goodbye'],
+  ]}},
+ { id: 'cs', color: '#455a9e', mark: '<>', name: { el: 'Πληροφορική', en: 'Computer Science', es: 'Informática', fr: 'Informatique', de: 'Informatik' }, cards: [
+  ['CPU', 'Κεντρική Μονάδα Επεξεργασίας: εκτελεί τις εντολές', 'CPU', 'Central Processing Unit: runs the instructions'],
+  ['RAM', 'Προσωρινή μνήμη που σβήνει όταν κλείσει ο υπολογιστής', 'RAM', 'Temporary memory that is cleared when the computer turns off'],
+  ['Bit', 'Η μικρότερη μονάδα πληροφορίας: 0 ή 1', 'Bit', 'The smallest unit of information: 0 or 1'],
+  ['Πόσα bits έχει ένα byte;', '8', 'How many bits are in a byte?', '8'],
+  ['Αλγόριθμος', 'Σειρά βημάτων για να λυθεί ένα πρόβλημα', 'Algorithm', 'A sequence of steps that solves a problem'],
+  ['Ο αριθμός 5 στο δυαδικό σύστημα', '101', 'The number 5 in binary', '101'],
+  ['Μεταβλητή', 'Ονομασμένη θέση στη μνήμη που κρατά μια τιμή', 'Variable', 'A named place in memory that holds a value'],
+  ['Βρόχος (loop)', 'Εντολές που επαναλαμβάνονται', 'Loop', 'Instructions that repeat'],
+  ['HTML', 'Γλώσσα σήμανσης για τη δημιουργία ιστοσελίδων', 'HTML', 'The markup language used to build web pages'],
+  ['Λειτουργικό σύστημα', 'Λογισμικό που διαχειρίζεται τον υπολογιστή (π.χ. Windows, Linux)', 'Operating system', 'Software that manages the computer (e.g. Windows, Linux)'],
+ ]},
+ { id: 'civics', color: '#5c6bc0', mark: 'Π', name: { el: 'Κοινωνική & Πολιτική Αγωγή', en: 'Civics', es: 'Educación cívica', fr: 'Éducation civique', de: 'Politik' }, cards: [
+  ['Δημοκρατία', 'Πολίτευμα όπου η εξουσία πηγάζει από τον λαό', 'Democracy', 'A system of government where power comes from the people'],
+  ['Οι τρεις εξουσίες του κράτους', 'Νομοθετική, εκτελεστική, δικαστική', 'The three branches of government', 'Legislative, executive, judicial'],
+  ['Σύνταγμα', 'Ο θεμελιώδης νόμος του κράτους', 'Constitution', 'The fundamental law of a country'],
+  ['Το πολίτευμα της Ελλάδας', 'Προεδρευόμενη Κοινοβουλευτική Δημοκρατία', "Greece's system of government", 'Parliamentary republic with a President'],
+  ['Πόσους βουλευτές έχει η Βουλή των Ελλήνων;', '300', 'How many MPs sit in the Hellenic Parliament?', '300'],
+  ['Οικουμενική Διακήρυξη των Δικαιωμάτων του Ανθρώπου', 'Υιοθετήθηκε από τον ΟΗΕ το 1948', 'Universal Declaration of Human Rights', 'Adopted by the UN in 1948'],
+  ['Έδρα της Ευρωπαϊκής Επιτροπής', 'Βρυξέλλες', 'Seat of the European Commission', 'Brussels'],
+  ['Φόροι', 'Χρήματα που πληρώνουν οι πολίτες στο κράτος για τις δημόσιες υπηρεσίες', 'Taxes', 'Money citizens pay the state to fund public services'],
+  ['Ποιοι ψηφίζουν στις εθνικές εκλογές στην Ελλάδα;', 'Οι πολίτες που κλείνουν τα 17 μέσα στο έτος των εκλογών', 'Who can vote in Greek national elections?', 'Citizens who turn 17 during the election year'],
+ ]},
+];
+// cards for the current language (Greek content for Ελληνικά, English for the rest)
+function libCards(subj, lang) {
+  const g = lang === 'el';
+  if (subj.cardsByLang) return subj.cardsByLang[g ? 'el' : 'en'].map(([q, a]) => ({ q, a }));
+  return subj.cards.map(c => g ? { q: c[0], a: c[1] } : { q: c[2], a: c[3] });
+}
+const subjName = s => s.name[LANG] || s.name.en;
+function addSubject(subj, quiet) {
+  if (S.decks.some(d => d.lib === subj.id)) return false;
+  S.decks.push({ id: uid(), lib: subj.id, name: subjName(subj), color: subj.color, cards: libCards(subj, LANG).map(c => ({ id: uid(), q: c.q, a: c.a, box: 1 })) });
+  if (!quiet) { save(); toast(t('subj_added', { s: subjName(subj) })); }
+  return true;
+}
+// =====================================================================
+// Curriculum: Greek school grades → subjects → main chapters
+// (a topic list; Claude writes the cards for the chapter you pick)
+// =====================================================================
+const SUBJ = {
+  lang:    { el: 'Γλώσσα', en: 'Greek language', color: '#d2463f', mark: 'Α' },
+  ancient: { el: 'Αρχαία Ελληνικά', en: 'Ancient Greek', color: '#8a5a2b', mark: 'Ω' },
+  math:    { el: 'Μαθηματικά', en: 'Mathematics', color: '#2f54eb', mark: 'Σ' },
+  alg:     { el: 'Άλγεβρα', en: 'Algebra', color: '#2f54eb', mark: 'x' },
+  geom:    { el: 'Γεωμετρία', en: 'Geometry', color: '#3d6fd8', mark: '△' },
+  env:     { el: 'Μελέτη Περιβάλλοντος', en: 'Environmental studies', color: '#3a8f3a', mark: 'Μ' },
+  sci:     { el: 'Φυσικά', en: 'Science', color: '#1c9a5e', mark: 'Φ' },
+  physics: { el: 'Φυσική', en: 'Physics', color: '#7a3fd1', mark: 'F' },
+  chem:    { el: 'Χημεία', en: 'Chemistry', color: '#0d8a9e', mark: 'H' },
+  bio:     { el: 'Βιολογία', en: 'Biology', color: '#1c9a5e', mark: 'B' },
+  history: { el: 'Ιστορία', en: 'History', color: '#b26a00', mark: 'Ι' },
+  geo:     { el: 'Γεωγραφία', en: 'Geography', color: '#3a8f3a', mark: 'Γ' },
+  english: { el: 'Αγγλικά', en: 'English', color: '#c2185b', mark: 'E' },
+  cs:      { el: 'Πληροφορική', en: 'Computer science', color: '#455a9e', mark: '<>' },
+  civics:  { el: 'Κοινωνική & Πολιτική Αγωγή', en: 'Civics', color: '#5c6bc0', mark: 'Π' },
+};
+const GRADE_LEVELS = [
+  { el: 'Δημοτικό', en: 'Primary school', grades: [
+    { id: 'd1', el: 'Α΄ Δημοτικού', en: 'Primary, year 1', s: {
+      lang: ['Τα γράμματα και οι ήχοι τους', 'Συλλαβές', 'Κεφαλαία και μικρά γράμματα', 'Τελεία και ερωτηματικό', 'Αρσενικό, θηλυκό, ουδέτερο'],
+      math: ['Αριθμοί ως το 100', 'Πρόσθεση και αφαίρεση ως το 20', 'Μονοί και ζυγοί αριθμοί', 'Γεωμετρικά σχήματα', 'Το ρολόι: ώρες'],
+      env: ['Το σώμα μας', 'Οι εποχές', 'Ζώα και φυτά', 'Η οικογένεια και το σχολείο', 'Οδική ασφάλεια'],
+      english: ['Χρώματα', 'Αριθμοί 1–10', 'Ζώα', 'Χαιρετισμοί'] } },
+    { id: 'd2', el: 'Β΄ Δημοτικού', en: 'Primary, year 2', s: {
+      lang: ['Ενεστώτας και αόριστος', 'Ενικός και πληθυντικός', 'Τόνος και διαλυτικά', 'Επίθετα', 'Σημεία στίξης'],
+      math: ['Αριθμοί ως το 100', 'Πρόσθεση και αφαίρεση με κρατούμενο', 'Προπαίδεια του 2, του 5 και του 10', 'Μήκος: εκατοστά και μέτρα', 'Χρήματα: ευρώ και λεπτά'],
+      env: ['Η γειτονιά μου', 'Επαγγέλματα', 'Το νερό και ο καιρός', 'Ζώα της Ελλάδας', 'Υγιεινή διατροφή'],
+      english: ['Ρούχα', 'Φαγητά', 'Το σπίτι', 'Αριθμοί 1–20'] } },
+    { id: 'd3', el: 'Γ΄ Δημοτικού', en: 'Primary, year 3', s: {
+      lang: ['Οι χρόνοι των ρημάτων', 'Ουσιαστικά και άρθρα', 'Παραθετικά επιθέτων', 'Σύνθετες λέξεις', 'Γράφω περιγραφή'],
+      math: ['Αριθμοί ως το 10.000', 'Η προπαίδεια', 'Η διαίρεση', 'Απλά κλάσματα', 'Περίμετρος'],
+      env: ['Ο τόπος μου', 'Χάρτες και προσανατολισμός', 'Τροφικές αλυσίδες', 'Στερεά, υγρά και αέρια'],
+      history: ['Οι δώδεκα θεοί του Ολύμπου', 'Ο Ηρακλής και οι άθλοι του', 'Ο Θησέας', 'Ο Τρωικός Πόλεμος', 'Παλαιολιθική και Νεολιθική εποχή'],
+      english: ['can / can\'t', 'Present simple', 'Η καθημερινή ρουτίνα', 'Ο καιρός'] } },
+    { id: 'd4', el: 'Δ΄ Δημοτικού', en: 'Primary, year 4', s: {
+      lang: ['Υποκείμενο, ρήμα, αντικείμενο', 'Ενεργητική και παθητική φωνή', 'Επιρρήματα', 'Αντωνυμίες', 'Η παράγραφος'],
+      math: ['Αριθμοί ως το 1.000.000', 'Κλάσματα και δεκαδικοί', 'Πολλαπλασιασμός και διαίρεση πολυψήφιων', 'Γωνίες', 'Εμβαδόν'],
+      env: ['Οι περιφέρειες της Ελλάδας', 'Βουνά, ποτάμια και λίμνες της Ελλάδας', 'Μορφές ενέργειας', 'Ο ανθρώπινος οργανισμός'],
+      history: ['Ο Μινωικός πολιτισμός', 'Ο Μυκηναϊκός πολιτισμός', 'Τα ομηρικά έπη', 'Ο αποικισμός', 'Αθήνα και Σπάρτη', 'Οι Περσικοί Πόλεμοι', 'Ο Μέγας Αλέξανδρος'],
+      english: ['Past simple', 'Προθέσεις τόπου', 'Χόμπι και ελεύθερος χρόνος', 'Ζώα και τα σπίτια τους'] } },
+    { id: 'd5', el: 'Ε΄ Δημοτικού', en: 'Primary, year 5', s: {
+      lang: ['Κλίση ρημάτων', 'Μετοχές', 'Κύριες και δευτερεύουσες προτάσεις', 'Συνώνυμα, αντώνυμα, ομόηχα', 'Επιχειρήματα σε ένα κείμενο'],
+      math: ['Δεκαδικοί αριθμοί', 'Πράξεις με κλάσματα', 'Ποσοστά', 'Τρίγωνα και τετράπλευρα', 'Μονάδες μέτρησης'],
+      sci: ['Η ενέργεια', 'Μείγματα', 'Θερμότητα και θερμοκρασία', 'Απλά ηλεκτρικά κυκλώματα', 'Πέψη και αναπνοή'],
+      history: ['Η ίδρυση της Κωνσταντινούπολης', 'Ο Ιουστινιανός και η Αγία Σοφία', 'Η Εικονομαχία', 'Η Μακεδονική δυναστεία', 'Η Άλωση του 1204', 'Η Άλωση του 1453'],
+      geo: ['Το ανάγλυφο της Ελλάδας', 'Το κλίμα της Ελλάδας', 'Ο πληθυσμός της Ελλάδας', 'Η οικονομία της Ελλάδας', 'Το περιβάλλον και η προστασία του'],
+      english: ['will και going to', 'Συγκριτικός βαθμός', 'Επαγγέλματα', 'Ταξίδια'] } },
+    { id: 'd6', el: 'ΣΤ΄ Δημοτικού', en: 'Primary, year 6', s: {
+      lang: ['Ευθύς και πλάγιος λόγος', 'Παθητική σύνταξη', 'Κυριολεξία και μεταφορά', 'Γράφω επιστολή', 'Ορθογραφία καταλήξεων'],
+      math: ['Λόγοι και αναλογίες', 'Ποσοστά', 'Απλές εξισώσεις', 'Ο κύκλος', 'Όγκος στερεών'],
+      sci: ['Ηλεκτρισμός και μαγνητισμός', 'Το φως', 'Ο ήχος', 'Το κύτταρο', 'Αναπαραγωγή'],
+      history: ['Η Τουρκοκρατία', 'Η Επανάσταση του 1821', 'Καποδίστριας και Όθωνας', 'Οι Βαλκανικοί Πόλεμοι', 'Η Μικρασιατική καταστροφή', 'Ο Β΄ Παγκόσμιος Πόλεμος'],
+      geo: ['Ήπειροι και ωκεανοί', 'Η Ευρώπη και η Ευρωπαϊκή Ένωση', 'Κλιματικές ζώνες', 'Ο πληθυσμός της Γης', 'Περιβαλλοντικά προβλήματα'],
+      english: ['Present perfect', 'First conditional', 'Το περιβάλλον', 'Η τεχνολογία'] } },
+  ]},
+  { el: 'Γυμνάσιο', en: 'Lower secondary (Gymnasio)', grades: [
+    { id: 'g1', el: 'Α΄ Γυμνασίου', en: 'Gymnasio, year 1', s: {
+      lang: ['Η περιγραφή', 'Η αφήγηση', 'Κλιτά και άκλιτα μέρη του λόγου', 'Πρόσωπα και χρόνοι των ρημάτων', 'Σημεία στίξης'],
+      ancient: ['Το αλφάβητο, οι τόνοι και τα πνεύματα', 'Α΄ κλίση ουσιαστικών', 'Β΄ κλίση ουσιαστικών', 'Το ρήμα εἰμί', 'Ο ενεστώτας του λύω'],
+      math: ['Φυσικοί αριθμοί', 'Κλάσματα', 'Δεκαδικοί αριθμοί', 'Απλές εξισώσεις', 'Ποσοστά', 'Γωνίες και τρίγωνα', 'Συμμετρία'],
+      physics: ['Μετρήσεις: μήκος, μάζα, χρόνος', 'Θερμοκρασία', 'Η ταχύτητα'],
+      bio: ['Το κύτταρο', 'Οι οργανισμοί και οι λειτουργίες τους', 'Φωτοσύνθεση', 'Κυτταρική αναπνοή'],
+      history: ['Ο Μινωικός πολιτισμός', 'Ο Μυκηναϊκός πολιτισμός', 'Αθήνα και Σπάρτη', 'Οι Περσικοί Πόλεμοι', 'Ο Χρυσός Αιώνας του Περικλή', 'Ο Μέγας Αλέξανδρος'],
+      geo: ['Χάρτες και συντεταγμένες', 'Το ηλιακό σύστημα', 'Οι κινήσεις της Γης', 'Ηφαίστεια και σεισμοί', 'Οι ήπειροι'],
+      english: ['Present simple και present continuous', 'Past simple', 'Countable και uncountable', 'Συγκριτικός και υπερθετικός'],
+      cs: ['Τα μέρη του υπολογιστή', 'Το λειτουργικό σύστημα', 'Επεξεργασία κειμένου', 'Ασφάλεια στο διαδίκτυο'] } },
+    { id: 'g2', el: 'Β΄ Γυμνασίου', en: 'Gymnasio, year 2', s: {
+      lang: ['Η επιχειρηματολογία', 'Ενεργητική και παθητική σύνταξη', 'Δευτερεύουσες προτάσεις', 'Η περίληψη', 'Κυριολεξία και μεταφορά'],
+      ancient: ['Γ΄ κλίση ουσιαστικών', 'Παρατατικός και αόριστος', 'Η μέση φωνή', 'Οι μετοχές', 'Το απαρέμφατο'],
+      math: ['Εξισώσεις και ανισώσεις', 'Η συνάρτηση y = αx', 'Τετραγωνική ρίζα', 'Πυθαγόρειο θεώρημα', 'Εμβαδά επίπεδων σχημάτων', 'Πραγματικοί αριθμοί'],
+      physics: ['Κινήσεις: ταχύτητα και επιτάχυνση', 'Οι δυνάμεις', 'Οι νόμοι του Νεύτωνα', 'Η πίεση', 'Η ενέργεια'],
+      chem: ['Η ύλη και οι ιδιότητές της', 'Μείγματα και διαλύματα', 'Άτομα και μόρια', 'Ο αέρας', 'Το νερό'],
+      bio: ['Πεπτικό σύστημα', 'Κυκλοφορικό σύστημα', 'Αναπνευστικό σύστημα', 'Νευρικό σύστημα', 'Ερειστικό και μυϊκό σύστημα'],
+      history: ['Η ίδρυση του Βυζαντίου', 'Το Ισλάμ και οι Άραβες', 'Οι Σταυροφορίες', 'Η μεσαιωνική Δύση', 'Η Άλωση του 1453'],
+      geo: ['Η Ευρώπη', 'Η Ασία', 'Η Αφρική', 'Η Αμερική', 'Η Ωκεανία'],
+      english: ['Present perfect', 'Τρόποι για το μέλλον', 'Modal verbs', 'First conditional'],
+      cs: ['Αλγόριθμοι', 'Διαγράμματα ροής', 'Προγραμματισμός με Scratch', 'Λογιστικά φύλλα'] } },
+    { id: 'g3', el: 'Γ΄ Γυμνασίου', en: 'Gymnasio, year 3', s: {
+      lang: ['Τρόποι ανάπτυξης παραγράφου', 'Συνοχή και συνεκτικότητα', 'Ευθύς και πλάγιος λόγος', 'Το άρθρο γνώμης', 'Η περίληψη'],
+      ancient: ['Συνηρημένα ρήματα', 'Η παθητική φωνή', 'Υποτακτική και ευκτική', 'Η σύνταξη των μετοχών', 'Δευτερεύουσες προτάσεις'],
+      math: ['Μονώνυμα και πολυώνυμα', 'Ταυτότητες', 'Παραγοντοποίηση', 'Εξισώσεις 2ου βαθμού', 'Συστήματα εξισώσεων', 'Τριγωνομετρία', 'Ομοιότητα'],
+      physics: ['Ηλεκτρικό φορτίο', 'Ηλεκτρικό ρεύμα και νόμος του Ohm', 'Ταλαντώσεις', 'Κύματα', 'Το φως'],
+      chem: ['Ο περιοδικός πίνακας', 'Οξέα, βάσεις και άλατα', 'Χημικές αντιδράσεις', 'Ο άνθρακας και οι υδρογονάνθρακες'],
+      bio: ['DNA και γονίδια', 'Κληρονομικότητα και νόμοι του Mendel', 'Η εξέλιξη', 'Οικοσυστήματα', 'Μικροοργανισμοί και άμυνα του οργανισμού'],
+      history: ['Ο Διαφωτισμός', 'Η Γαλλική Επανάσταση', 'Η Επανάσταση του 1821', 'Οι Βαλκανικοί Πόλεμοι', 'Ο Α΄ Παγκόσμιος Πόλεμος', 'Ο Β΄ Παγκόσμιος Πόλεμος', 'Η Μεταπολίτευση'],
+      civics: ['Η δημοκρατία', 'Το Σύνταγμα', 'Οι τρεις εξουσίες', 'Τα ανθρώπινα δικαιώματα', 'Η Ευρωπαϊκή Ένωση'],
+      english: ['Passive voice', 'Reported speech', 'Second conditional', 'Relative clauses'],
+      cs: ['Μεταβλητές, συνθήκες και επαναλήψεις', 'Δίκτυα και Διαδίκτυο', 'Ιστοσελίδες με HTML'] } },
+  ]},
+  { el: 'Λύκειο', en: 'Upper secondary (Lykeio)', grades: [
+    { id: 'l1', el: 'Α΄ Λυκείου', en: 'Lykeio, year 1', s: {
+      lang: ['Η επικοινωνία και τα είδη κειμένων', 'Η περίληψη', 'Η επιχειρηματολογία', 'Γλωσσικά ποικίλματα και ύφος'],
+      ancient: ['Ξενοφώντος Ελληνικά: το ιστορικό πλαίσιο', 'Γ΄ κλίση: δύσκολα ουσιαστικά', 'Ανώμαλα ρήματα', 'Ονοματικοί προσδιορισμοί'],
+      alg: ['Πραγματικοί αριθμοί', 'Απόλυτη τιμή', 'Ρίζες', 'Εξισώσεις 2ου βαθμού', 'Ανισώσεις 2ου βαθμού', 'Πρόοδοι', 'Συναρτήσεις'],
+      geom: ['Κριτήρια ισότητας τριγώνων', 'Παράλληλες ευθείες', 'Παραλληλόγραμμα', 'Εγγεγραμμένα σχήματα'],
+      physics: ['Ευθύγραμμη κίνηση', 'Οι νόμοι του Νεύτωνα', 'Έργο και ενέργεια', 'Διατήρηση της μηχανικής ενέργειας'],
+      chem: ['Ο περιοδικός πίνακας', 'Χημικοί δεσμοί', 'Οξέα και βάσεις', 'Στοιχειομετρία και mol'],
+      bio: ['Η χημική σύσταση του κυττάρου', 'Η δομή του κυττάρου', 'Ένζυμα και μεταβολισμός', 'Κυτταρική διαίρεση'],
+      history: ['Οι πολιτισμοί της Ανατολής', 'Η ελληνική πόλη-κράτος', 'Η ελληνιστική εποχή', 'Η Ρώμη'],
+      english: ['Ανασκόπηση χρόνων', 'Γράφω essay', 'Phrasal verbs'] } },
+    { id: 'l2', el: 'Β΄ Λυκείου', en: 'Lykeio, year 2', s: {
+      lang: ['Το δοκίμιο', 'Πειθώ και τρόποι πειθούς', 'Νεολογισμοί και δάνειες λέξεις'],
+      ancient: ['Θουκυδίδης: το ιστορικό πλαίσιο', 'Η σύνταξη των μετοχών', 'Η σύνταξη του απαρεμφάτου'],
+      alg: ['Γραμμικά συστήματα', 'Τριγωνομετρία', 'Πολυώνυμα', 'Εκθετική συνάρτηση', 'Λογάριθμοι'],
+      geom: ['Μετρικές σχέσεις', 'Εμβαδά', 'Κανονικά πολύγωνα', 'Μήκος κύκλου και εμβαδόν κυκλικού δίσκου'],
+      physics: ['Οριζόντια βολή', 'Κυκλική κίνηση', 'Ορμή και κρούσεις', 'Ηλεκτρικό πεδίο'],
+      chem: ['Υδρογονάνθρακες', 'Αλκοόλες', 'Καρβοξυλικά οξέα'],
+      history: ['Το Βυζάντιο', 'Ο Μεσαίωνας στη Δύση', 'Η Αναγέννηση', 'Οι μεγάλες ανακαλύψεις', 'Η Μεταρρύθμιση'],
+      cs: ['Αλγόριθμοι', 'Προγραμματισμός σε Python'],
+      english: ['Conditionals', 'Γράφω email και επιστολή', 'Inversion και emphasis'] } },
+    { id: 'l3', el: 'Γ΄ Λυκείου', en: 'Lykeio, year 3', s: {
+      lang: ['Περίληψη και πύκνωση', 'Κατανόηση και ερμηνεία κειμένου', 'Παραγωγή λόγου', 'Το λογοτεχνικό κείμενο'],
+      ancient: ['Το αδίδακτο κείμενο', 'Συντακτικό: ανασκόπηση', 'Φιλοσοφικός λόγος: Πλάτων και Αριστοτέλης'],
+      math: ['Συναρτήσεις', 'Όρια', 'Συνέχεια', 'Παράγωγοι', 'Μονοτονία και ακρότατα', 'Ολοκληρώματα'],
+      physics: ['Ταλαντώσεις', 'Κύματα', 'Ρευστά σε κίνηση', 'Στερεό σώμα', 'Κρούσεις'],
+      chem: ['Χημική ισορροπία', 'Οξέα, βάσεις και pH', 'Οργανική χημεία', 'Ηλεκτρονιακή δομή'],
+      bio: ['Το DNA', 'Αντιγραφή, μεταγραφή, μετάφραση', 'Μενδελική κληρονομικότητα', 'Μεταλλάξεις', 'Βιοτεχνολογία'],
+      history: ['Ο κοινοβουλευτισμός στην Ελλάδα', 'Η ελληνική οικονομία (19ος–20ός αι.)', 'Το προσφυγικό ζήτημα', 'Το Κρητικό ζήτημα'],
+      cs: ['Δομή επιλογής', 'Δομή επανάληψης', 'Πίνακες', 'Υποπρογράμματα', 'Αναζήτηση και ταξινόμηση'] } },
+  ]},
+];
+const ALL_GRADES = GRADE_LEVELS.flatMap(l => l.grades);
+const EBOOK_CODE = { d1: 'K01', d2: 'K02', d3: 'K03', d4: 'K04', d5: 'K05', d6: 'K06', g1: 'K07', g2: 'K08', g3: 'K09', l1: 'K10', l2: 'K11', l3: 'K12' };
+const ebookGrade = gid => `https://ebooks.edu.gr/ebooks/v2/class-main.jsp?classcode=${EBOOK_CODE[gid]}`;
+const ebookSearch = q => `https://ebooks.edu.gr/ebooks/simple-search?query=${encodeURIComponent(q)}`;
+const EXT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
+const gname = g => LANG === 'el' ? g.el : g.en;
+const sname = id => (SUBJ[id] && (LANG === 'el' ? SUBJ[id].el : SUBJ[id].en)) || id;
+// Full-year outline per grade: "Unit: chapter | chapter | …" — one unit per line, in order
+const SYLLABUS = {
+d1: {
+lang: `Γράμματα και ήχοι: Φωνήεντα | Σύμφωνα | Δίψηφα φωνήεντα (ου, αι, ει, οι) | Δίψηφα σύμφωνα (μπ, ντ, γκ, τσ, τζ)
+Λέξεις και προτάσεις: Συλλαβές | Ο τόνος | Κεφαλαίο στην αρχή της πρότασης | Τελεία, κόμμα, ερωτηματικό
+Γραμματική: Τα άρθρα | Αρσενικό, θηλυκό, ουδέτερο | Ενικός και πληθυντικός`,
+math: `Αριθμοί: Αριθμοί ως το 10 | Αριθμοί ως το 20 | Αριθμοί ως το 100 | Μονοί και ζυγοί
+Πράξεις: Πρόσθεση ως το 10 | Αφαίρεση ως το 10 | Πρόσθεση και αφαίρεση ως το 20 | Προβλήματα
+Γεωμετρία και μετρήσεις: Κύκλος, τρίγωνο, τετράγωνο | Μακρύ–κοντό, βαρύ–ελαφρύ | Το ρολόι | Τα χρήματα`,
+env: `Εγώ και οι άλλοι: Το σώμα μου | Η οικογένειά μου | Το σχολείο μου
+Ο κόσμος γύρω μου: Οι εποχές | Ο καιρός | Ζώα | Φυτά
+Ασφάλεια και υγεία: Οδική ασφάλεια | Καθαριότητα | Διατροφή`,
+english: `Hello!: Χαιρετισμοί | Συστήνομαι | Χρώματα
+Ο κόσμος μου: Αριθμοί 1–10 | Ζώα | Παιχνίδια | Η οικογένεια`},
+d2: {
+lang: `Γραμματική: Ουσιαστικά | Επίθετα | Ρήματα: ενεστώτας | Ρήματα: αόριστος | Ενικός και πληθυντικός
+Ορθογραφία: Τόνος και διαλυτικά | Καταλήξεις -ος, -ας, -ης | Καταλήξεις ρημάτων -ω, -εις, -ει
+Γράφω: Σημεία στίξης | Μικρή περιγραφή | Μικρή ιστορία`,
+math: `Αριθμοί ως το 100: Δεκάδες και μονάδες | Σύγκριση αριθμών | Αριθμογραμμή
+Πράξεις: Πρόσθεση με κρατούμενο | Αφαίρεση με δανεικό | Προπαίδεια του 2, 5 και 10 | Μοιρασιά
+Μετρήσεις: Μήκος: εκατοστά και μέτρα | Χρήματα | Ώρα και ημερολόγιο
+Γεωμετρία: Γραμμές | Σχήματα και στερεά | Συμμετρία`,
+env: `Ο τόπος μου: Η γειτονιά | Επαγγέλματα | Συγκοινωνίες
+Η φύση: Το νερό | Καιρός και εποχές | Ζώα της Ελλάδας | Φυτά: ρίζα, βλαστός, φύλλα
+Ζω υγιεινά: Υγιεινή διατροφή | Άσκηση | Ανακύκλωση`,
+english: `My things: Ρούχα | Φαγητά | Το σπίτι μου
+Numbers and time: Αριθμοί 1–20 | Μέρες της εβδομάδας | Μήνες`},
+d3: {
+lang: `Γραμματική: Ουσιαστικά και άρθρα | Επίθετα και παραθετικά | Οι χρόνοι των ρημάτων | Αντωνυμίες
+Λεξιλόγιο: Σύνθετες λέξεις | Παράγωγες λέξεις | Συνώνυμα και αντώνυμα
+Γράφω: Περιγραφή προσώπου | Περιγραφή τόπου | Αφήγηση`,
+math: `Αριθμοί: Αριθμοί ως το 1.000 | Αριθμοί ως το 10.000 | Στρογγυλοποίηση
+Πράξεις: Πρόσθεση και αφαίρεση τριψήφιων | Η προπαίδεια | Πολλαπλασιασμός | Διαίρεση
+Κλάσματα: Τι είναι κλάσμα | Σύγκριση κλασμάτων
+Γεωμετρία και μετρήσεις: Περίμετρος | Γωνίες | Μάζα: γραμμάρια και κιλά | Χωρητικότητα: λίτρα`,
+env: `Ο τόπος μου: Χάρτες | Προσανατολισμός | Η περιοχή μου
+Ζωντανοί οργανισμοί: Τροφικές αλυσίδες | Ομάδες ζώων | Φυτά
+Ύλη: Στερεά, υγρά, αέρια | Ο κύκλος του νερού`,
+history: `Μυθολογία: Η δημιουργία του κόσμου | Οι 12 θεοί του Ολύμπου | Ο Προμηθέας | Ο Ηρακλής και οι άθλοι του | Θησέας και Μινώταυρος | Η Αργοναυτική εκστρατεία | Ο Τρωικός Πόλεμος | Η Οδύσσεια
+Προϊστορία: Παλαιολιθική εποχή | Νεολιθική εποχή | Εποχή του Χαλκού`,
+english: `Daily life: Present simple | Η καθημερινή ρουτίνα | can / can't | Ο καιρός`},
+d4: {
+lang: `Σύνταξη: Υποκείμενο, ρήμα, αντικείμενο | Κατηγορούμενο | Ενεργητική και παθητική φωνή
+Μέρη του λόγου: Επιρρήματα | Αντωνυμίες | Προθέσεις | Σύνδεσμοι
+Γράφω: Η παράγραφος | Οδηγίες | Επιστολή`,
+math: `Αριθμοί: Αριθμοί ως το 1.000.000 | Πολλαπλάσια και διαιρέτες
+Πράξεις: Πολλαπλασιασμός πολυψήφιων | Διαίρεση πολυψήφιων | Σειρά των πράξεων
+Κλάσματα και δεκαδικοί: Ισοδύναμα κλάσματα | Δεκαδικοί αριθμοί | Πρόσθεση και αφαίρεση δεκαδικών
+Γεωμετρία: Είδη γωνιών | Είδη τριγώνων | Εμβαδόν | Μονάδες μήκους`,
+env: `Η Ελλάδα: Οι περιφέρειες | Βουνά | Ποτάμια και λίμνες | Νησιά
+Ενέργεια: Μορφές ενέργειας | Ανανεώσιμες πηγές ενέργειας
+Ο οργανισμός μας: Οι αισθήσεις | Σκελετός και μύες | Υγεία`,
+history: `Οι πρώτοι πολιτισμοί: Κυκλαδικός πολιτισμός | Μινωικός πολιτισμός | Μυκηναϊκός πολιτισμός
+Γεωμετρικά και αρχαϊκά χρόνια: Τα ομηρικά έπη | Ο αποικισμός | Οι Ολυμπιακοί Αγώνες
+Κλασικά χρόνια: Αθήνα και Σπάρτη | Οι Περσικοί Πόλεμοι | Ο Χρυσός Αιώνας | Ο Πελοποννησιακός Πόλεμος
+Η Μακεδονία: Ο Φίλιππος Β΄ | Ο Μέγας Αλέξανδρος | Τα ελληνιστικά χρόνια`,
+english: `Past and places: Past simple | Προθέσεις τόπου | Η πόλη μου | Χόμπι`},
+d5: {
+lang: `Ρήματα: Κλίση ρημάτων | Μετοχές | Απαρέμφατο
+Σύνταξη: Κύριες και δευτερεύουσες προτάσεις | Ειδικές, αιτιολογικές και χρονικές προτάσεις
+Λεξιλόγιο: Ομόηχα | Παρώνυμα | Αρκτικόλεξα
+Γράφω: Επιχειρήματα | Περίληψη`,
+math: `Δεκαδικοί: Πράξεις με δεκαδικούς | Δεκαδικά κλάσματα
+Κλάσματα: Ομώνυμα και ετερώνυμα κλάσματα | Πρόσθεση και αφαίρεση κλασμάτων | Πολλαπλασιασμός κλασμάτων
+Ποσοστά: Ποσοστά | Μέσος όρος
+Γεωμετρία: Τρίγωνα | Τετράπλευρα | Εμβαδόν τριγώνου | Μονάδες εμβαδού`,
+sci: `Ύλη: Μείγματα | Διαλύματα
+Ενέργεια: Μορφές και μετατροπές ενέργειας | Θερμότητα και θερμοκρασία | Απλά ηλεκτρικά κυκλώματα
+Ο άνθρωπος: Πεπτικό σύστημα | Αναπνευστικό σύστημα | Κυκλοφορικό σύστημα`,
+history: `Πρώιμο Βυζάντιο: Ο Μέγας Κωνσταντίνος και η Κωνσταντινούπολη | Η εξάπλωση του χριστιανισμού | Ο Ιουστινιανός και η Αγία Σοφία | Ο Ηράκλειος
+Μέσο Βυζάντιο: Η Εικονομαχία | Κύριλλος και Μεθόδιος | Η Μακεδονική δυναστεία | Ο Βασίλειος Β΄
+Ύστερο Βυζάντιο: Οι Σταυροφορίες | Η Άλωση του 1204 | Οι Παλαιολόγοι | Η Άλωση του 1453`,
+geo: `Η Ελλάδα: Θέση και σύνορα | Ανάγλυφο | Κλίμα | Τα νερά της Ελλάδας
+Άνθρωπος και τόπος: Πληθυσμός | Οι πόλεις | Γεωργία, βιομηχανία, τουρισμός
+Περιβάλλον: Ρύπανση | Προστασία της φύσης`,
+english: `Future and comparing: will και going to | Συγκριτικός βαθμός | Επαγγέλματα | Ταξίδια`},
+d6: {
+lang: `Λόγος: Ευθύς και πλάγιος λόγος | Ενεργητική και παθητική σύνταξη
+Λεξιλόγιο: Κυριολεξία και μεταφορά | Παροιμίες και εκφράσεις
+Γράφω: Επιστολή | Άρθρο | Διαφήμιση
+Ορθογραφία: Καταλήξεις ρημάτων | Καταλήξεις ουσιαστικών και επιθέτων`,
+math: `Αριθμοί: Δυνάμεις | Μεγάλοι αριθμοί
+Κλάσματα: Πράξεις με κλάσματα | Διαίρεση κλασμάτων
+Αναλογίες: Λόγος και αναλογία | Ανάλογα και αντιστρόφως ανάλογα ποσά | Ποσοστά | Κλίμακα
+Εξισώσεις: Απλές εξισώσεις
+Γεωμετρία: Ο κύκλος | Εμβαδά | Όγκος στερεών`,
+sci: `Φυσική: Ηλεκτρισμός | Μαγνητισμός | Το φως | Ο ήχος
+Βιολογία: Το κύτταρο | Μικροοργανισμοί | Αναπαραγωγή`,
+history: `Τουρκοκρατία: Η ζωή των υπόδουλων | Κλέφτες και αρματολοί | Ο Ρήγας Φεραίος
+Η Επανάσταση του 1821: Η Φιλική Εταιρεία | Η έναρξη της Επανάστασης | Οι μεγάλες μάχες | Η ναυμαχία του Ναβαρίνου
+Νεότερη Ελλάδα: Ο Καποδίστριας | Ο Όθωνας | Οι Βαλκανικοί Πόλεμοι | Η Μικρασιατική καταστροφή | Ο Β΄ Παγκόσμιος Πόλεμος και η Κατοχή`,
+geo: `Η Γη: Ήπειροι και ωκεανοί | Κλιματικές ζώνες
+Η Ευρώπη: Οι χώρες της Ευρώπης | Η Ευρωπαϊκή Ένωση
+Ο κόσμος: Ο πληθυσμός της Γης | Περιβαλλοντικά προβλήματα`,
+english: `Grammar and topics: Present perfect | First conditional | Το περιβάλλον | Η τεχνολογία`},
+g1: {
+lang: `Κείμενα: Περιγραφή | Αφήγηση | Οδηγίες
+Γραμματική: Μέρη του λόγου | Ρήματα: πρόσωπα, χρόνοι, εγκλίσεις | Κλίση ουσιαστικών
+Σύνταξη: Υποκείμενο και κατηγόρημα | Αντικείμενο | Προσδιορισμοί
+Λεξιλόγιο: Παραγωγή και σύνθεση | Σημεία στίξης`,
+ancient: `Βασικά: Αλφάβητο, τόνοι και πνεύματα | Το άρθρο
+Ουσιαστικά: Α΄ κλίση | Β΄ κλίση
+Ρήματα: Ενεστώτας του λύω | Παρατατικός | Το ρήμα εἰμί
+Επίθετα: Επίθετα β΄ κλίσης`,
+math: `Φυσικοί αριθμοί: Πράξεις | Δυνάμεις | Διαιρετότητα, ΕΚΠ και ΜΚΔ
+Κλάσματα: Ισοδύναμα κλάσματα | Πράξεις με κλάσματα
+Δεκαδικοί: Πράξεις με δεκαδικούς
+Εξισώσεις και ποσοστά: Απλές εξισώσεις | Ποσοστά | Ανάλογα ποσά
+Ρητοί αριθμοί: Θετικοί και αρνητικοί | Πράξεις με ρητούς
+Γεωμετρία: Ευθεία, ημιευθεία, τμήμα | Γωνίες | Τρίγωνα | Συμμετρία | Παραλληλόγραμμα`,
+physics: `Μετρήσεις: Μήκος | Εμβαδόν και όγκος | Μάζα και πυκνότητα | Χρόνος
+Θερμότητα: Θερμοκρασία | Θερμότητα`,
+bio: `Η ζωή: Χαρακτηριστικά των οργανισμών | Το κύτταρο | Το μικροσκόπιο
+Λειτουργίες: Διατροφή | Φωτοσύνθεση | Αναπνοή | Αναπαραγωγή
+Οικοσυστήματα: Τροφικές αλυσίδες | Βιοποικιλότητα`,
+history: `Οι πρώτοι πολιτισμοί: Παλαιολιθική και Νεολιθική εποχή | Αίγυπτος και Μεσοποταμία
+Εποχή του Χαλκού: Κυκλαδικός πολιτισμός | Μινωικός πολιτισμός | Μυκηναϊκός πολιτισμός
+Αρχαϊκή εποχή: Η πόλη-κράτος | Ο αποικισμός | Αθήνα και Σπάρτη
+Κλασική εποχή: Οι Περσικοί Πόλεμοι | Ο Χρυσός Αιώνας | Ο Πελοποννησιακός Πόλεμος
+Ελληνιστική και ρωμαϊκή εποχή: Ο Μέγας Αλέξανδρος | Τα ελληνιστικά βασίλεια | Η Ρώμη`,
+geo: `Η Γη: Το ηλιακό σύστημα | Οι κινήσεις της Γης | Χάρτες και συντεταγμένες
+Φυσικό περιβάλλον: Το εσωτερικό της Γης | Σεισμοί και ηφαίστεια | Ατμόσφαιρα και κλίμα | Τα νερά
+Ήπειροι: Οι ήπειροι | Η Ελλάδα στον χάρτη`,
+english: `Grammar: Present simple και present continuous | Past simple | Countable και uncountable | Συγκριτικός και υπερθετικός`,
+cs: `Υλικό: Τα μέρη του υπολογιστή | Μονάδες μέτρησης πληροφορίας
+Λογισμικό: Λειτουργικό σύστημα | Αρχεία και φάκελοι | Επεξεργασία κειμένου
+Διαδίκτυο: Αναζήτηση πληροφοριών | Ασφάλεια στο διαδίκτυο`},
+g2: {
+lang: `Κείμενα: Επιχειρηματολογία | Περίληψη | Άρθρο
+Σύνταξη: Ενεργητική και παθητική σύνταξη | Δευτερεύουσες προτάσεις | Μετοχές
+Λεξιλόγιο: Κυριολεξία και μεταφορά | Δάνειες λέξεις`,
+ancient: `Ουσιαστικά: Γ΄ κλίση: αφωνόληκτα | Γ΄ κλίση: υγρόληκτα και σιγμόληκτα
+Ρήματα: Αόριστος α΄ | Αόριστος β΄ | Μέλλοντας | Μέση φωνή
+Ονοματικοί τύποι: Μετοχές | Απαρέμφατο
+Σύνταξη: Υποκείμενο και αντικείμενο | Επιρρηματικοί προσδιορισμοί`,
+math: `Εξισώσεις: Εξισώσεις | Ανισώσεις | Προβλήματα με εξισώσεις
+Συναρτήσεις: Συντεταγμένες | Η συνάρτηση y = αx | Η συνάρτηση y = αx + β | Αντιστρόφως ανάλογα ποσά
+Πραγματικοί αριθμοί: Τετραγωνική ρίζα | Άρρητοι αριθμοί
+Στατιστική: Μέση τιμή | Διάμεσος | Διαγράμματα
+Γεωμετρία: Εμβαδά | Πυθαγόρειο θεώρημα | Τριγωνομετρία: ημίτονο, συνημίτονο, εφαπτομένη | Ο κύκλος | Πρίσμα και κύλινδρος`,
+physics: `Κίνηση: Θέση και μετατόπιση | Ταχύτητα | Επιτάχυνση
+Δυνάμεις: Η δύναμη | Οι νόμοι του Νεύτωνα | Βάρος και μάζα
+Πίεση: Πίεση | Υδροστατική πίεση | Άνωση
+Ενέργεια: Έργο | Μορφές ενέργειας | Διατήρηση της ενέργειας | Θερμότητα`,
+chem: `Η ύλη: Ιδιότητες της ύλης | Καταστάσεις της ύλης | Μείγματα και διαλύματα
+Αέρας και νερό: Ο αέρας | Ρύπανση του αέρα | Το νερό
+Δομή της ύλης: Άτομα και μόρια | Χημικά στοιχεία | Χημικές ενώσεις`,
+bio: `Θρέψη: Πεπτικό σύστημα | Κυκλοφορικό σύστημα | Αναπνευστικό σύστημα | Απεκκριτικό σύστημα
+Έλεγχος: Νευρικό σύστημα | Αισθήσεις | Ενδοκρινείς αδένες
+Κίνηση: Ερειστικό σύστημα | Μυϊκό σύστημα`,
+history: `Βυζάντιο: Πρώιμο Βυζάντιο | Ο Ιουστινιανός | Η Εικονομαχία | Η Μακεδονική δυναστεία | Οι Κομνηνοί | Η Άλωση του 1204 | Οι Παλαιολόγοι και η Άλωση του 1453
+Ισλάμ: Ο Μωάμεθ | Η αραβική επέκταση
+Η Δύση: Οι Φράγκοι και ο Καρλομάγνος | Η φεουδαρχία | Οι Σταυροφορίες | Η Αναγέννηση`,
+geo: `Ευρώπη: Φυσικό περιβάλλον της Ευρώπης | Πληθυσμός και οικονομία της Ευρώπης
+Οι άλλες ήπειροι: Ασία | Αφρική | Αμερική | Ωκεανία | Ανταρκτική`,
+english: `Grammar: Present perfect | Τρόποι για το μέλλον | Modal verbs | First conditional`,
+cs: `Αλγόριθμοι: Τι είναι αλγόριθμος | Διαγράμματα ροής
+Προγραμματισμός: Scratch: κίνηση και ήχοι | Μεταβλητές | Επαναλήψεις | Συνθήκες
+Εφαρμογές: Λογιστικά φύλλα | Παρουσιάσεις`},
+g3: {
+lang: `Κείμενα: Δοκίμιο | Άρθρο γνώμης | Περίληψη
+Παράγραφος: Τρόποι ανάπτυξης | Συνοχή και συνεκτικότητα
+Γραμματική: Ευθύς και πλάγιος λόγος | Δευτερεύουσες προτάσεις`,
+ancient: `Ρήματα: Συνηρημένα ρήματα | Παθητική φωνή | Υποτακτική | Ευκτική | Προστακτική
+Σύνταξη: Σύνταξη των μετοχών | Ειδικές και αιτιολογικές προτάσεις | Τελικές και υποθετικές προτάσεις
+Ονόματα: Ανώμαλα ουσιαστικά | Παραθετικά επιθέτων`,
+math: `Αλγεβρικές παραστάσεις: Μονώνυμα | Πολυώνυμα | Ταυτότητες | Παραγοντοποίηση | Ρητές παραστάσεις
+Εξισώσεις: Εξισώσεις 2ου βαθμού | Ανισώσεις | Συστήματα εξισώσεων
+Συναρτήσεις: Η συνάρτηση y = αx² | Η παραβολή
+Γεωμετρία: Ισότητα τριγώνων | Θεώρημα του Θαλή | Ομοιότητα | Τριγωνομετρία`,
+physics: `Ηλεκτρισμός: Ηλεκτρικό φορτίο | Ηλεκτρικό πεδίο | Ηλεκτρικό ρεύμα | Νόμος του Ohm | Ηλεκτρική ενέργεια
+Ταλαντώσεις και κύματα: Ταλαντώσεις | Κύματα | Ο ήχος
+Οπτική: Ανάκλαση | Διάθλαση | Φακοί`,
+chem: `Περιοδικός πίνακας: Ηλεκτρονιακή δομή | Ο περιοδικός πίνακας
+Οξέα και βάσεις: Οξέα | Βάσεις | Εξουδετέρωση και άλατα | Το pH
+Οργανική χημεία: Ο άνθρακας | Υδρογονάνθρακες | Καύσιμα | Αλκοόλες`,
+bio: `Κληρονομικότητα: Το DNA | Χρωμοσώματα | Μίτωση και μείωση | Οι νόμοι του Mendel
+Εξέλιξη: Ο Δαρβίνος | Η φυσική επιλογή
+Υγεία: Μικρόβια | Το ανοσοποιητικό σύστημα | Εμβόλια
+Οικολογία: Οικοσυστήματα | Οι κύκλοι της ύλης`,
+history: `Νέοι χρόνοι: Ο Διαφωτισμός | Η Αμερικανική Επανάσταση | Η Γαλλική Επανάσταση | Η Βιομηχανική Επανάσταση
+Η Ελληνική Επανάσταση: Η Φιλική Εταιρεία | Η Επανάσταση του 1821 | Ο Καποδίστριας
+Το ελληνικό κράτος: Ο Όθωνας | Ο Τρικούπης | Οι Βαλκανικοί Πόλεμοι | Η Μικρασιατική καταστροφή
+20ός αιώνας: Ο Α΄ Παγκόσμιος Πόλεμος | Ο Μεσοπόλεμος | Ο Β΄ Παγκόσμιος Πόλεμος | Ο Εμφύλιος | Η δικτατορία 1967–1974 | Η Μεταπολίτευση`,
+civics: `Κοινωνία: Κοινωνικοποίηση | Η οικογένεια | Κοινωνικές ομάδες
+Πολιτεία: Η δημοκρατία | Το Σύνταγμα | Οι τρεις εξουσίες | Οι εκλογές
+Δικαιώματα: Ανθρώπινα δικαιώματα | Τα δικαιώματα του παιδιού
+Ευρώπη και κόσμος: Η Ευρωπαϊκή Ένωση | Ο ΟΗΕ`,
+english: `Grammar: Passive voice | Reported speech | Second conditional | Relative clauses`,
+cs: `Προγραμματισμός: Μεταβλητές | Συνθήκες | Επαναλήψεις | Λίστες
+Δίκτυα: Δίκτυα υπολογιστών | Το Διαδίκτυο | Ασφάλεια
+Ιστοσελίδες: HTML | CSS`},
+l1: {
+lang: `Επικοινωνία: Γλώσσα και επικοινωνία | Είδη κειμένων
+Κείμενα: Περίληψη | Επιχειρηματολογία | Άρθρο | Επιστολή
+Γλώσσα: Ύφος και γλωσσικά ποικίλματα | Η σημασία των λέξεων`,
+ancient: `Ιστοριογραφία: Ξενοφώντος Ελληνικά: το ιστορικό πλαίσιο | Το τέλος του Πελοποννησιακού Πολέμου | Οι Τριάκοντα Τύραννοι
+Γραμματική: Γ΄ κλίση | Ανώμαλα ρήματα | Αντωνυμίες
+Σύνταξη: Ονοματικοί προσδιορισμοί | Πλάγιος λόγος`,
+alg: `Πιθανότητες: Δειγματικός χώρος | Η έννοια της πιθανότητας
+Πραγματικοί αριθμοί: Πράξεις και ιδιότητες | Διάταξη | Απόλυτη τιμή | Ρίζες
+Εξισώσεις: Εξισώσεις 1ου βαθμού | Η εξίσωση x^ν = α | Εξισώσεις 2ου βαθμού
+Ανισώσεις: Ανισώσεις 1ου βαθμού | Ανισώσεις 2ου βαθμού
+Πρόοδοι: Αριθμητική πρόοδος | Γεωμετρική πρόοδος
+Συναρτήσεις: Η έννοια της συνάρτησης | Γραφική παράσταση | Η συνάρτηση f(x) = αx + β`,
+geom: `Βασικά: Σημεία, ευθείες, γωνίες
+Τρίγωνα: Κριτήρια ισότητας τριγώνων | Ανισοτικές σχέσεις
+Παράλληλες ευθείες: Παράλληλες ευθείες | Άθροισμα γωνιών τριγώνου
+Τετράπλευρα: Παραλληλόγραμμα | Ορθογώνιο, ρόμβος, τετράγωνο | Τραπέζιο
+Κύκλος: Εγγεγραμμένες γωνίες | Εγγεγραμμένα σχήματα`,
+physics: `Κινηματική: Ευθύγραμμη ομαλή κίνηση | Ομαλά επιταχυνόμενη κίνηση | Ελεύθερη πτώση
+Δυναμική: Οι νόμοι του Νεύτωνα | Η τριβή
+Ενέργεια: Έργο | Κινητική και δυναμική ενέργεια | Διατήρηση της μηχανικής ενέργειας | Ισχύς`,
+chem: `Δομή της ύλης: Το άτομο | Ο περιοδικός πίνακας | Χημικοί δεσμοί
+Ενώσεις: Οξέα, βάσεις, άλατα | Χημικές αντιδράσεις
+Στοιχειομετρία: Το mol | Διαλύματα και συγκέντρωση | Στοιχειομετρικοί υπολογισμοί`,
+bio: `Η χημεία της ζωής: Νερό και άλατα | Πρωτεΐνες, υδατάνθρακες, λιπίδια | Νουκλεϊκά οξέα
+Το κύτταρο: Δομή του κυττάρου | Η κυτταρική μεμβράνη
+Μεταβολισμός: Ένζυμα | Φωτοσύνθεση | Κυτταρική αναπνοή
+Κυτταρική διαίρεση: Μίτωση | Μείωση`,
+history: `Αρχαίοι πολιτισμοί: Μεσοποταμία | Αίγυπτος
+Ο ελληνικός κόσμος: Μινωικός και Μυκηναϊκός πολιτισμός | Η πόλη-κράτος | Η αθηναϊκή δημοκρατία | Ο Πελοποννησιακός Πόλεμος
+Ελληνιστικός κόσμος: Ο Μέγας Αλέξανδρος | Τα ελληνιστικά βασίλεια
+Η Ρώμη: Η ρωμαϊκή δημοκρατία | Η ρωμαϊκή αυτοκρατορία`,
+english: `Skills: Ανασκόπηση χρόνων | Γράφω essay | Phrasal verbs | Collocations`},
+l2: {
+lang: `Κείμενα: Το δοκίμιο | Η πειθώ και οι τρόποι της | Παραγωγή λόγου
+Λεξιλόγιο: Νεολογισμοί | Ορολογία`,
+ancient: `Ιστοριογραφία: Θουκυδίδης: το ιστορικό πλαίσιο | Θουκυδίδης: ο Πελοποννησιακός Πόλεμος
+Σύνταξη: Η σύνταξη των μετοχών | Η σύνταξη του απαρεμφάτου | Δευτερεύουσες προτάσεις`,
+alg: `Συστήματα: Γραμμικά συστήματα | Μη γραμμικά συστήματα
+Ιδιότητες συναρτήσεων: Μονοτονία | Ακρότατα | Άρτιες και περιττές συναρτήσεις
+Τριγωνομετρία: Τριγωνομετρικοί αριθμοί | Τριγωνομετρικές συναρτήσεις | Τριγωνομετρικές εξισώσεις
+Πολυώνυμα: Πολυώνυμα | Διαίρεση πολυωνύμων | Πολυωνυμικές εξισώσεις
+Εκθετική και λογαριθμική: Εκθετική συνάρτηση | Λογάριθμοι | Λογαριθμική συνάρτηση`,
+geom: `Αναλογίες: Θεώρημα του Θαλή | Ομοιότητα
+Μετρικές σχέσεις: Πυθαγόρειο θεώρημα | Νόμος των συνημιτόνων
+Εμβαδά: Εμβαδά πολυγώνων
+Κύκλος: Κανονικά πολύγωνα | Μήκος κύκλου | Εμβαδόν κύκλου`,
+physics: `Καμπυλόγραμμες κινήσεις: Οριζόντια βολή | Ομαλή κυκλική κίνηση
+Ορμή: Η ορμή | Κρούσεις
+Ηλεκτρισμός: Νόμος του Coulomb | Ηλεκτρικό πεδίο | Δυναμικό | Πυκνωτές`,
+chem: `Οργανική χημεία: Ονοματολογία | Υδρογονάνθρακες | Αλκοόλες | Καρβοξυλικά οξέα`,
+history: `Μεσαίωνας: Το Βυζάντιο | Η μεσαιωνική Δύση
+Νεότεροι χρόνοι: Η Αναγέννηση | Οι μεγάλες ανακαλύψεις | Η Μεταρρύθμιση | Ο Διαφωτισμός`,
+cs: `Αλγόριθμοι: Η έννοια του αλγορίθμου | Δομές αλγορίθμων
+Python: Μεταβλητές | Συνθήκες | Επαναλήψεις | Λίστες | Συναρτήσεις`,
+english: `Skills: Conditionals | Email και επιστολή | Inversion | Wishes`},
+l3: {
+lang: `Κατανόηση: Περίληψη και πύκνωση | Κατανόηση κειμένου | Ερμηνεία
+Παραγωγή: Παραγωγή λόγου
+Λογοτεχνία: Ποίηση | Πεζογραφία`,
+ancient: `Αδίδακτο: Μετάφραση αδίδακτου | Γραμματική ανασκόπηση | Συντακτική ανασκόπηση
+Φιλοσοφικός λόγος: Πλάτων | Αριστοτέλης`,
+math: `Συναρτήσεις και όρια: Πραγματικές συναρτήσεις | Σύνθεση συναρτήσεων | Αντίστροφη συνάρτηση | Όρια | Συνέχεια | Θεώρημα Bolzano
+Διαφορικός λογισμός: Η παράγωγος | Κανόνες παραγώγισης | Θεώρημα Rolle | Θεώρημα Μέσης Τιμής | Μονοτονία | Ακρότατα | Κυρτότητα
+Ολοκληρωτικός λογισμός: Αρχική συνάρτηση | Ορισμένο ολοκλήρωμα | Εμβαδόν χωρίου`,
+physics: `Ταλαντώσεις: Απλή αρμονική ταλάντωση | Φθίνουσες ταλαντώσεις | Εξαναγκασμένες ταλαντώσεις
+Κύματα: Μηχανικά κύματα | Στάσιμα κύματα | Συμβολή
+Ρευστά: Ρευστά σε ισορροπία | Εξίσωση της συνέχειας | Εξίσωση του Bernoulli
+Στερεό σώμα: Ροπή | Ροπή αδράνειας | Στροφορμή
+Κρούσεις: Κρούσεις | Φαινόμενο Doppler`,
+chem: `Χημική ισορροπία: Η χημική ισορροπία | Αρχή Le Chatelier
+Οξέα και βάσεις: Το pH | Ρυθμιστικά διαλύματα | Ογκομέτρηση
+Ηλεκτρονιακή δομή: Τροχιακά | Ο περιοδικός πίνακας
+Οργανική χημεία: Οργανικές αντιδράσεις | Ισομέρεια`,
+bio: `Γενετικό υλικό: Το DNA | Αντιγραφή | Μεταγραφή | Μετάφραση
+Γενετική: Νόμοι του Mendel | Φυλοσύνδετη κληρονομικότητα | Μεταλλάξεις
+Βιοτεχνολογία: Ανασυνδυασμένο DNA | Εφαρμογές της βιοτεχνολογίας | Γενετικά τροποποιημένοι οργανισμοί`,
+history: `Νεότερη Ελλάδα: Κόμματα και κοινοβουλευτισμός | Η ελληνική οικονομία (19ος–20ός αιώνας) | Το προσφυγικό ζήτημα | Το Κρητικό ζήτημα`,
+cs: `Αλγοριθμική: Αλγόριθμοι | Δομή ακολουθίας | Δομή επιλογής | Δομή επανάληψης
+Δομές δεδομένων: Πίνακες | Αναζήτηση και ταξινόμηση | Στοίβα και ουρά
+Τμηματικός προγραμματισμός: Υποπρογράμματα`},
+};
+// turn "Unit: a | b" lines into [{unit, topics: []}]
+const parseUnits = txt => txt.split('\n').map(l => { const i = l.indexOf(':'); return { unit: l.slice(0, i).trim(), topics: l.slice(i + 1).split('|').map(x => x.trim()).filter(Boolean) }; });
+for (const lvl of GRADE_LEVELS) for (const g of lvl.grades) if (SYLLABUS[g.id]) g.s = Object.fromEntries(Object.entries(SYLLABUS[g.id]).map(([k, v]) => [k, parseUnits(v)]));
+
+let genBusy = null, genQueue = [], openSubj = {};
+function topicTitle(gid, sid, ref) {
+  const g = ALL_GRADES.find(x => x.id === gid); if (!g) return null;
+  if (ref[0] === 'c') return ((S.custom || {})[gid + ':' + sid] || [])[+ref.slice(1)] || null;
+  const [u, i] = ref.split('.').map(Number);
+  return g.s[sid] && g.s[sid][u] && g.s[sid][u].topics[i] || null;
+}
+function topicBtn(gid, sid, ref, title) {
+  const key = `${gid}:${sid}:${ref}`, d = S.decks.find(x => x.lib === key), busy = genBusy === key, queued = genQueue.includes(key);
+  return `<button class="topic ${d ? 'has' : ''}" data-topic="${key}" ${busy ? 'aria-busy="true"' : ''}>
+    <span>${esc(title)}</span><small>${busy ? t('making') : queued ? t('queued') : d ? t('n_cards', { n: d.cards.length }) + ' ✓' : (sample ? t('make') : '')}</small></button>`;
+}
+function renderGrades() {
+  if (!S.grade || !ALL_GRADES.find(g => g.id === S.grade)) S.grade = null;
+  $('gradePick').innerHTML = GRADE_LEVELS.map(l => `<div class="glevel"><span class="meta">${esc(LANG === 'el' ? l.el : l.en)}</span><div class="chips">${
+    l.grades.map(g => `<button class="chip ${g.id === S.grade ? 'on' : ''}" data-grade="${g.id}">${esc(gname(g))}</button>`).join('')}</div></div>`).join('');
+  const g = ALL_GRADES.find(x => x.id === S.grade);
+  if (!g) { $('gradeSubjects').innerHTML = `<p class="empty">${t('pick_grade')}</p>`; return; }
+  $('gradeSubjects').innerHTML = `<div class="booksbar"><p class="meta" style="margin:0">${t(sample ? 'grade_hint' : 'grade_no_ai')}</p>
+      <a class="btn booklink" href="${ebookGrade(g.id)}" target="_blank" rel="noopener">${t('books_grade', { g: g.el })} ${EXT_ICON}</a></div>` + Object.entries(g.s).map(([sid, units]) => {
+    const m = SUBJ[sid] || { color: '#888', mark: '?' };
+    const keys = units.flatMap((u, ui) => u.topics.map((_, ti) => `${g.id}:${sid}:${ui}.${ti}`));
+    const done = keys.filter(k => S.decks.some(d => d.lib === k)).length;
+    const custom = (S.custom || {})[g.id + ':' + sid] || [];
+    const isOpen = openSubj[g.id + ':' + sid];
+    return `<details class="panel gsub" data-subj="${g.id}:${sid}" ${isOpen ? 'open' : ''}>
+      <summary><span class="badge" style="background:${m.color}">${esc(m.mark)}</span>
+        <span class="gs-name"><b>${esc(sname(sid))}</b><span class="meta num">${t('units_chapters', { u: units.length, c: keys.length })} · ${t('made_n', { n: done })}</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+      <div class="units">
+        <a class="booklink-sm" href="${ebookSearch((SUBJ[sid] ? SUBJ[sid].el : sid) + ' ' + g.el)}" target="_blank" rel="noopener">${t('find_book', { s: sname(sid) })} ${EXT_ICON}</a>
+        ${units.map((u, ui) => `<section class="unit"><div class="unit-head"><h4><span class="unum">${ui + 1}</span>${esc(u.unit)}</h4>
+          ${sample ? `<button class="btn ghost small" data-unit="${g.id}:${sid}:${ui}" ${genBusy ? 'disabled' : ''}>${t('make_unit')}</button>` : ''}</div>
+          <div class="topics">${u.topics.map((tp, ti) => topicBtn(g.id, sid, `${ui}.${ti}`, tp)).join('')}</div></section>`).join('')}
+        <section class="unit"><div class="unit-head"><h4><span class="unum">+</span>${t('own_chapters')}</h4></div>
+          ${custom.length ? `<div class="topics">${custom.map((tp, ci) => topicBtn(g.id, sid, 'c' + ci, tp)).join('')}</div>` : ''}
+          <form class="row addch" data-addch="${g.id}:${sid}"><input type="text" required maxlength="120" placeholder="${esc(t('own_ph'))}" aria-label="${esc(t('own_chapters'))}" style="flex:1;min-width:180px"><button class="btn" type="submit">${t('add_chapter')}</button></form>
+        </section>
+      </div></details>`;
+  }).join('');
+}
+async function makeTopic(key) {
+  const [gid, sid, ref] = key.split(':'), g = ALL_GRADES.find(x => x.id === gid), topic = topicTitle(gid, sid, ref);
+  if (!g || !topic || S.decks.some(d => d.lib === key)) return null;
+  const prompt = `You write study flashcards for a student in the Greek school system.
+Grade: ${g.el} (${g.en}). Subject: ${SUBJ[sid] ? SUBJ[sid].el : sid}. Chapter: "${topic}".
+Write 10 flashcards that cover the key ideas of this chapter at exactly this grade's level, in your own words. Each card has a short question or term ("q", under 90 characters) and a clear, correct answer ("a", under 180 characters). Use formulas, definitions, dates or examples where they help.
+Write both questions and answers in ${LANG_EN[LANG]}.
+Reply with only a JSON array like [{"q":"...","a":"..."}] and nothing else.`;
+  let out = sample.json ? await sample.json(prompt) : JSON.parse((await sample(prompt)).text.replace(/^[^\[]*/, '').replace(/[^\]]*$/, ''));
+  if (out && !Array.isArray(out) && Array.isArray(out.cards)) out = out.cards;
+  const cards = (Array.isArray(out) ? out : []).filter(c => c && c.q && c.a).slice(0, 20);
+  if (!cards.length) throw { message: 'empty' };
+  const d = { id: uid(), lib: key, name: `${sname(sid)} · ${topic}`, color: (SUBJ[sid] || {}).color || COLORS[0], grade: gid,
+    cards: cards.map(c => ({ id: uid(), q: String(c.q).slice(0, 200), a: String(c.a).slice(0, 400), box: 1 })) };
+  S.decks.push(d); save();
+  return d;
+}
+async function openTopic(key) {
+  const existing = S.decks.find(x => x.lib === key);
+  if (existing) { curDeck = existing.id; curCard = null; editing = false; location.hash = 'cards'; return; }
+  if (!sample) { toast(t('grade_no_ai')); return; }
+  if (genBusy) { if (!genQueue.includes(key)) genQueue.push(key); renderGrades(); return; }
+  genBusy = key; renderGrades();
+  try {
+    const d = await makeTopic(key);
+    genBusy = null;
+    if (d) { toast(t('topic_ready', { n: d.cards.length })); curDeck = d.id; curCard = null; editing = false; location.hash = 'cards'; }
+  } catch (e) { genBusy = null; toast(t(e && e.code === 'rate_limited' ? 'ai_rate' : e && e.code === 'not_granted' ? 'ai_na' : 'ai_fail')); renderGrades(); }
+  runQueue();
+}
+async function runQueue() {   // make queued chapters one after another (used by "Make the whole unit")
+  if (genBusy || !genQueue.length) { if (!genBusy && location.hash === '#subjects') renderGrades(); return; }
+  genBusy = genQueue.shift(); renderGrades();
+  try { await makeTopic(genBusy); }
+  catch (e) { if (e && e.code === 'rate_limited') { toast(t('ai_rate')); genQueue = []; } else if (e && e.code === 'not_granted') { toast(t('ai_na')); genQueue = []; } }
+  genBusy = null;
+  if (!genQueue.length) toast(t('unit_done'));
+  if (location.hash === '#subjects') renderGrades();
+  runQueue();
+}
+
+function renderSubjects() {
+  renderGrades();
+  const all = LIBRARY.every(s => S.decks.some(d => d.lib === s.id));
+  $('addAll').disabled = all; $('addAll').textContent = t(all ? 'all_added' : 'add_all');
+  $('subjGrid').innerHTML = LIBRARY.map(s => {
+    const d = S.decks.find(x => x.lib === s.id);
+    const n = d ? d.cards.length : libCards(s, LANG).length;
+    const mastered = d ? d.cards.filter(c => (c.box || 1) >= 4).length : 0;
+    const pct = d && d.cards.length ? Math.round(mastered / d.cards.length * 100) : 0;
+    return `<article class="panel subj">
+      <div class="subj-top"><span class="badge" style="background:${s.color}">${esc(s.mark)}</span>
+        <div><h3>${esc(subjName(s))}</h3><span class="meta num">${t('n_cards', { n })}${d ? ' · ' + t('pct_mastered', { p: pct }) : ''}</span></div></div>
+      <div class="mastery" aria-hidden="true"><span style="width:${pct}%;background:${s.color}"></span></div>
+      <div class="row">${d ? `<button class="btn primary" data-sstudy="${d.id}">${t('btn_study')}</button><button class="btn" data-squiz="${d.id}">${t('btn_quiz')}</button>`
+        : `<button class="btn" data-sadd="${s.id}">${t('add_subject')}</button>`}</div>
+    </article>`;
+  }).join('');
+}
+
+// =====================================================================
+// Starter decks (examples you can edit or delete)
+// =====================================================================
+function starter() {
+  const mk = (name, color, pairs) => ({ id: uid(), name, color, cards: pairs.map(([q, a]) => ({ id: uid(), q, a, box: 1 })) });
+  const times = [];
+  for (const [a, b] of [[6, 7], [7, 8], [8, 9], [6, 8], [9, 7], [12, 6], [7, 7], [8, 8], [9, 9], [11, 12], [6, 9], [12, 12]]) times.push([`${a} × ${b}`, String(a * b)]);
+  return {
+    decks: [
+      mk('Science basics', COLORS[1], [
+        ['Photosynthesis', 'How plants turn light, water and carbon dioxide into sugar and oxygen'],
+        ['Mitochondria', 'The part of a cell that releases energy from food'],
+        ['H₂O', 'Water: two hydrogen atoms bonded to one oxygen atom'],
+        ['Gravity on Earth', 'About 9.8 m/s² — how fast falling things speed up'],
+        ['Speed of light', 'About 300,000 km per second'],
+        ['Evaporation', 'A liquid turning into a gas, like puddles drying in the sun'],
+        ['Newton\'s first law', 'Things keep doing what they are doing unless a force acts on them'],
+        ['Atom', 'The smallest unit of a chemical element'],
+        ['Food chain', 'The order in which living things eat each other, starting from plants'],
+        ['Boiling point of water', '100 °C at sea level'],
+      ]),
+      mk('World capitals', COLORS[0], [
+        ['Greece', 'Athens'], ['Japan', 'Tokyo'], ['Canada', 'Ottawa'], ['Australia', 'Canberra'], ['Brazil', 'Brasília'],
+        ['Egypt', 'Cairo'], ['Germany', 'Berlin'], ['Kenya', 'Nairobi'], ['Turkey', 'Ankara'], ['Spain', 'Madrid'],
+        ['South Korea', 'Seoul'], ['Argentina', 'Buenos Aires'], ['Italy', 'Rome'], ['Norway', 'Oslo'],
+      ]),
+      mk('Times tables', COLORS[2], times),
+    ],
+    notes: [{ id: uid(), title: 'How to use Study Desk', body: '1. Pick a deck in Flashcards and flip through it.\n2. Press "Knew it" or "Didn\'t know" — cards you miss come back more often.\n3. Take a Quiz to test yourself.\n4. Use the Focus timer: 25 minutes of work, then a 5 minute break.\n\nMake your own deck with "New deck", or let Claude write cards on any topic.', updated: Date.now() }],
+    stats: {},          // "YYYY-MM-DD" -> { cards, minutes, quizzes:[score%], blocks }
+    focus: { work: 25, brk: 5 },
+  };
+}
+
+// =====================================================================
+// Saving: your account (db) when available, otherwise this browser
+// =====================================================================
+let S = null;
+let db = null, docRef = null, saveTimer = null, saving = false, dirty = false;
+const LS_KEY = 'studyDesk.v1';
+function loadLocal() { try { const t = localStorage.getItem(LS_KEY); return t ? JSON.parse(t) : null; } catch (e) { return null; } }
+function saveLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch (e) {} }
+function setSync(ok, key) { $('sync').classList.toggle('ok', ok); $('syncTxt').textContent = t(key); }
+function save() {
+  saveLocal();
+  dirty = true;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(flush, 900);   // one write per pause in typing/clicking
+}
+async function flush() {
+  if (!docRef || saving || !dirty) return;
+  saving = true; dirty = false;
+  try { await docRef.set(JSON.parse(JSON.stringify(S))); setSync(true, 'sync_account'); }
+  catch (e) {
+    if (e && e.code === 'unavailable') { dirty = true; setTimeout(flush, 1500 + Math.random() * 1000); }
+    else if (e && e.code === 'quota_exceeded') setSync(false, 'sync_full');
+    else { docRef = null; setSync(false, 'sync_local'); }
+  }
+  saving = false;
+  if (dirty) flush();
+}
+async function connectAccount() {
+  if (!window.claude || !window.claude.use) return;
+  try {
+    db = await window.claude.use('db');
+    const user = await window.claude.use('user');
+    const id = user ? await user.id() : null;
+    if (!db || !id) return;
+    docRef = db.doc('data/users/' + id + '/studydesk');
+    const timeout = setTimeout(() => setSync(false, 'sync_wait'), 10000);
+    const snap = await docRef.get();
+    clearTimeout(timeout);
+    if (snap.exists) { S = normalize(JSON.parse(JSON.stringify(snap.data()))); if (S.lang && LANGS[S.lang]) LANG = S.lang; if (!S.libSeeded) { LIBRARY.forEach(sb => addSubject(sb, true)); S.libSeeded = true; save(); } applyLang(); renderAll(); }
+    else { dirty = true; flush(); }   // first visit: store what's on screen
+    setSync(true, 'sync_account');
+  } catch (e) { docRef = null; }
+}
+function normalize(s) {
+  const base = starter();
+  s = s || base;
+  s.decks = Array.isArray(s.decks) ? s.decks : base.decks;
+  s.notes = Array.isArray(s.notes) ? s.notes : [];
+  s.stats = s.stats && typeof s.stats === 'object' ? s.stats : {};
+  s.focus = s.focus || { work: 25, brk: 5 };
+  return s;
+}
+const day = (d = today()) => (S.stats[d] = S.stats[d] || { cards: 0, minutes: 0, quizzes: [], blocks: 0 });
+
+// =====================================================================
+// Navigation (#home, #cards, #quiz, #focus, #notes)
+// =====================================================================
+const VIEWS = ['home', 'subjects', 'cards', 'quiz', 'focus', 'notes'];
+function route() {
+  const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'home';
+  VIEWS.forEach(x => $('v-' + x).classList.toggle('on', x === v));
+  document.querySelectorAll('nav.side a').forEach(a => a.classList.toggle('on', a.dataset.v === v));
+  if (v === 'home') renderHome();
+  if (v === 'subjects') renderSubjects();
+  if (v === 'cards') renderCards();
+  if (v === 'quiz') renderQuizSetup();
+  if (v === 'notes') renderNotes();
+  if (v === 'focus') renderTimer();
+}
+addEventListener('hashchange', route);
+
+// =====================================================================
+// Dashboard
+// =====================================================================
+function streak() {
+  let n = 0; const d = new Date();
+  const active = k => { const s = S.stats[k]; return s && (s.cards || s.minutes || (s.quizzes || []).length); };
+  if (!active(today(d))) d.setDate(d.getDate() - 1);     // today not started yet doesn't break it
+  while (active(today(d))) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+function renderHome() {
+  const td = day(), h = new Date().getHours();
+  $('hello').textContent = t(h < 12 ? 'hello_m' : h < 18 ? 'hello_a' : 'hello_e');
+  $('tStreak').textContent = streak();
+  $('tCards').textContent = td.cards;
+  $('tFocus').textContent = Math.round(td.minutes);
+  const all = Object.values(S.stats).flatMap(s => s.quizzes || []);
+  $('tQuiz').textContent = all.length ? Math.round(all.reduce((a, b) => a + b, 0) / all.length) + '%' : '–';
+  $('tQuizSub').textContent = all.length ? t('quiz_count', { n: all.length }) : t('t_quiz_none');
+  // 7-day chart
+  const days = []; const d = new Date(); d.setDate(d.getDate() - 6);
+  for (let i = 0; i < 7; i++) { days.push(today(d)); d.setDate(d.getDate() + 1); }
+  const vals = days.map(k => (S.stats[k] || {}).cards || 0), max = Math.max(10, ...vals);
+  $('chart').innerHTML = vals.map((v, i) => `<div class="col"><span class="v num">${v || ''}</span><div class="bar ${i === 6 ? 'today' : ''}" style="height:${(v / max) * 100}%" title="${v}"></div></div>`).join('');
+  $('chartDays').innerHTML = days.map((k, i) => `<span>${i === 6 ? t('today') : fmtDate(k + 'T12:00', { weekday: 'short' })}</span>`).join('');
+  // decks
+  $('dashDecks').innerHTML = S.decks.length ? S.decks.map(dk => {
+    const n = dk.cards.length || 1, cnt = [0, 0, 0, 0, 0];
+    dk.cards.forEach(c => cnt[Math.min(5, c.box || 1) - 1]++);
+    const mastered = cnt[3] + cnt[4];
+    return `<div class="deckrow"><span class="dot" style="background:${dk.color}"></span>
+      <div><b>${esc(dk.name)}</b> <span class="meta num">· ${t('deck_meta', { n: dk.cards.length, p: Math.round(mastered / n * 100) })}</span>
+        <div class="mastery" aria-hidden="true">${cnt.map((c, i) => `<span style="width:${c / n * 100}%;background:${['var(--bad)', '#e68a3a', 'var(--highlight)', '#7cc68f', 'var(--good)'][i]}"></span>`).join('')}</div></div>
+      <div class="row"><button class="btn" data-study="${dk.id}">${t('btn_study')}</button><button class="btn" data-quiz="${dk.id}">${t('btn_quiz')}</button></div></div>`;
+  }).join('') : `<p class="empty">${t('no_decks')}</p>`;
+}
+$('dashDecks').addEventListener('click', e => {
+  const s = e.target.closest('[data-study]'), q = e.target.closest('[data-quiz]');
+  if (s) { curDeck = s.dataset.study; location.hash = 'cards'; }
+  if (q) { quizDeck = q.dataset.quiz; location.hash = 'quiz'; }
+});
+
+$('subjGrid').addEventListener('click', e => {
+  const a = e.target.closest('[data-sadd]'), st = e.target.closest('[data-sstudy]'), q = e.target.closest('[data-squiz]');
+  if (a) { addSubject(LIBRARY.find(s => s.id === a.dataset.sadd)); renderSubjects(); }
+  if (st) { curDeck = st.dataset.sstudy; curCard = null; editing = false; location.hash = 'cards'; }
+  if (q) { quizDeck = q.dataset.squiz; Q = null; location.hash = 'quiz'; }
+});
+$('gradePick').addEventListener('click', e => { const b = e.target.closest('[data-grade]'); if (b) { S.grade = b.dataset.grade; save(); renderGrades(); } });
+$('gradeSubjects').addEventListener('click', e => {
+  const b = e.target.closest('[data-topic]'); if (b && !b.disabled) { openTopic(b.dataset.topic); return; }
+  const u = e.target.closest('[data-unit]');
+  if (u && !u.disabled) {
+    const [gid, sid, ui] = u.dataset.unit.split(':'), g = ALL_GRADES.find(x => x.id === gid);
+    g.s[sid][+ui].topics.forEach((_, ti) => { const k = `${gid}:${sid}:${ui}.${ti}`; if (!S.decks.some(d => d.lib === k) && !genQueue.includes(k)) genQueue.push(k); });
+    toast(t('unit_started')); runQueue();
+  }
+});
+$('gradeSubjects').addEventListener('toggle', e => { const d = e.target.closest('[data-subj]'); if (d) openSubj[d.dataset.subj] = d.open; }, true);
+$('gradeSubjects').addEventListener('submit', e => {
+  const f = e.target.closest('[data-addch]'); if (!f) return;
+  e.preventDefault();
+  const v = f.querySelector('input').value.trim(); if (!v) return;
+  S.custom = S.custom || {}; const k = f.dataset.addch;
+  (S.custom[k] = S.custom[k] || []).push(v.slice(0, 120)); save();
+  const [gid, sid] = k.split(':');
+  openSubj[k] = true; renderGrades();
+  openTopic(`${gid}:${sid}:c${S.custom[k].length - 1}`);
+});
+$('addAll').addEventListener('click', () => {
+  let n = 0; LIBRARY.forEach(s => { if (addSubject(s, true)) n++; });
+  if (n) { save(); toast(t('all_added')); }
+  renderSubjects();
+});
+
+// =====================================================================
+// Flashcards (Leitner boxes 1–5: knew it → up a box, missed → back to box 1)
+// =====================================================================
+let curDeck = null, curCard = null, lastCard = null, editing = false, sessionCount = 0, sessionRight = 0;
+const deck = () => S.decks.find(d => d.id === curDeck) || S.decks[0];
+function renderCards() {
+  if (!S.decks.find(d => d.id === curDeck)) curDeck = S.decks[0] ? S.decks[0].id : null;
+  $('deckChips').innerHTML = S.decks.map(d => `<button class="chip ${d.id === curDeck ? 'on' : ''}" data-deck="${d.id}"><span class="dot" style="background:${d.color}"></span>${esc(d.name)} <span class="num" style="opacity:.6">${d.cards.length}</span></button>`).join('');
+  $('stage').hidden = editing; $('editor').hidden = !editing;
+  $('editToggle').textContent = t(editing ? 'back_study' : 'edit_deck');
+  $('editToggle').disabled = !deck();
+  if (editing) return renderEditor();
+  if (!curCard || !deck() || !deck().cards.includes(curCard)) nextCard();
+  showCard();
+}
+function nextCard() {
+  const d = deck();
+  if (!d || !d.cards.length) { curCard = null; return; }
+  // lower boxes come up more often
+  const pool = d.cards.filter(c => c !== lastCard || d.cards.length === 1);
+  const weights = pool.map(c => [16, 8, 4, 2, 1][Math.min(5, c.box || 1) - 1]);
+  let r = Math.random() * weights.reduce((a, b) => a + b, 0);
+  curCard = pool.find((c, i) => (r -= weights[i]) <= 0) || pool[0];
+  lastCard = curCard;
+}
+function showCard() {
+  $('flip').classList.remove('flipped');
+  const d = deck();
+  const has = !!curCard;
+  $('gradeRow').style.visibility = has ? 'visible' : 'hidden';
+  $('cardQ').textContent = has ? curCard.q : t(d ? 'empty_deck_q' : 'no_deck_q');
+  $('cardA').textContent = has ? curCard.a : t('empty_deck_a');
+  $('cardTagF').textContent = d ? d.name + ' · ' + t('question') : 'Study Desk';
+  $('cardBox').innerHTML = has ? t('box', { n: curCard.box || 1 }) + ' ' + [1, 2, 3, 4, 5].map(i => `<i class="${i <= (curCard.box || 1) ? 'on' : ''}"></i>`).join('') : '';
+  $('sessionTxt').textContent = sessionCount ? t('session', { r: sessionRight, n: sessionCount }) : '';
+}
+function flip() { if (curCard) $('flip').classList.toggle('flipped'); }
+function grade(knew) {
+  if (!curCard) return;
+  curCard.box = knew ? Math.min(5, (curCard.box || 1) + 1) : 1;
+  day().cards++; sessionCount++; if (knew) sessionRight++;
+  save(); nextCard(); showCard();
+}
+$('flip').addEventListener('click', flip);
+$('flipBtn').addEventListener('click', flip);
+$('knewBtn').addEventListener('click', () => grade(true));
+$('missBtn').addEventListener('click', () => grade(false));
+addEventListener('keydown', e => {
+  if (location.hash !== '#cards' || editing || ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+  if (e.key === ' ') { e.preventDefault(); flip(); }
+  if (e.key === '1') grade(false);
+  if (e.key === '2') grade(true);
+});
+$('deckChips').addEventListener('click', e => { const c = e.target.closest('[data-deck]'); if (!c) return; curDeck = c.dataset.deck; curCard = null; sessionCount = sessionRight = 0; renderCards(); });
+$('editToggle').addEventListener('click', () => { editing = !editing; renderCards(); });
+$('newDeckBtn').addEventListener('click', () => {
+  const d = { id: uid(), name: t('new_deck'), color: COLORS[S.decks.length % COLORS.length], cards: [] };
+  S.decks.push(d); curDeck = d.id; editing = true; save(); renderCards();
+  $('deckName').focus(); $('deckName').select();
+});
+
+// ---- deck editor ----
+function renderEditor() {
+  const d = deck(); if (!d) return;
+  $('deckName').value = d.name;
+  $('cardRows').innerHTML = d.cards.length ? d.cards.map(c => `<tr><td>${esc(c.q)}</td><td>${esc(c.a)}</td><td><button class="btn ghost" data-del="${c.id}" aria-label="Delete card">✕</button></td></tr>`).join('')
+    : `<tr><td colspan="3" class="empty">${t('no_cards_table')}</td></tr>`;
+}
+$('deckName').addEventListener('input', e => { deck().name = e.target.value || t('untitled_deck'); save(); $('deckChips').querySelector('.on') && renderCardsChipsOnly(); });
+function renderCardsChipsOnly() { $('deckChips').innerHTML = S.decks.map(d => `<button class="chip ${d.id === curDeck ? 'on' : ''}" data-deck="${d.id}"><span class="dot" style="background:${d.color}"></span>${esc(d.name)} <span class="num" style="opacity:.6">${d.cards.length}</span></button>`).join(''); }
+$('cardRows').addEventListener('click', e => { const b = e.target.closest('[data-del]'); if (!b) return; const d = deck(); d.cards = d.cards.filter(c => c.id !== b.dataset.del); save(); renderEditor(); renderCardsChipsOnly(); });
+$('addForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const q = $('newQ').value.trim(), a = $('newA').value.trim(); if (!q || !a) return;
+  deck().cards.push({ id: uid(), q, a, box: 1 }); save();
+  $('newQ').value = ''; $('newA').value = ''; $('newQ').focus();
+  renderEditor(); renderCardsChipsOnly(); toast(t('card_added'));
+});
+$('bulkBtn').addEventListener('click', () => {
+  const lines = $('bulk').value.split('\n').map(l => l.trim()).filter(Boolean);
+  let n = 0;
+  for (const l of lines) { const m = l.match(/^(.+?)\s*(?:\t| - | – |:)\s*(.+)$/); if (m) { deck().cards.push({ id: uid(), q: m[1].trim(), a: m[2].trim(), box: 1 }); n++; } }
+  $('bulk').value = ''; save(); renderEditor(); renderCardsChipsOnly();
+  toast(n ? t('imported', { n }) : t('import_none'));
+});
+$('delDeck').addEventListener('click', () => {
+  const d = deck(); if (!d) return;
+  if ($('delDeck').dataset.confirm !== d.id) { $('delDeck').dataset.confirm = d.id; $('delDeck').textContent = t('click_again'); setTimeout(() => { $('delDeck').dataset.confirm = ''; $('delDeck').textContent = t('delete_deck'); }, 3000); return; }
+  S.decks = S.decks.filter(x => x !== d); curDeck = null; editing = false; save(); renderCards(); toast(t('deck_deleted'));
+  $('delDeck').dataset.confirm = ''; $('delDeck').textContent = t('delete_deck');
+});
+
+// ---- Claude writes cards ----
+let sample = null, aiBusy = false;
+async function connectAI() {
+  try { sample = window.claude && window.claude.use ? await window.claude.use('sample') : null; } catch (e) { sample = null; }
+  $('aiPanel').hidden = !sample;
+  if (location.hash === '#subjects') renderGrades();
+}
+$('aiPanel').hidden = true;
+$('aiBtn').addEventListener('click', async () => {
+  const topic = $('aiTopic').value.trim();
+  if (!topic) { $('aiStatus').textContent = t('ai_need_topic'); $('aiStatus').className = 'status err'; return; }
+  if (!sample || aiBusy) return;
+  aiBusy = true; $('aiBtn').disabled = true; $('aiStatus').className = 'status'; $('aiStatus').textContent = t('ai_working');
+  const n = +$('aiCount').value;
+  const prompt = `Write ${n} study flashcards about: "${topic}".
+Each card has a short question or term ("q", under 80 characters) and a clear, correct answer ("a", under 160 characters) suitable for a student.
+Write both questions and answers in ${LANG_EN[LANG]}.
+Reply with only a JSON array like [{"q":"...","a":"..."}] and nothing else.`;
+  try {
+    let out = sample.json ? await sample.json(prompt) : JSON.parse((await sample(prompt)).text.replace(/^[^\[]*/, '').replace(/[^\]]*$/, ''));
+    if (out && !Array.isArray(out) && Array.isArray(out.cards)) out = out.cards;
+    const cards = (Array.isArray(out) ? out : []).filter(c => c && c.q && c.a).slice(0, 30);
+    if (!cards.length) throw { message: 'empty' };
+    cards.forEach(c => deck().cards.push({ id: uid(), q: String(c.q).slice(0, 200), a: String(c.a).slice(0, 400), box: 1 }));
+    save(); renderEditor(); renderCardsChipsOnly();
+    $('aiStatus').textContent = t('ai_done', { n: cards.length, t: topic });
+    $('aiTopic').value = '';
+  } catch (e) {
+    $('aiStatus').className = 'status err';
+    $('aiStatus').textContent = t(e && e.code === 'not_granted' ? 'ai_na' : e && e.code === 'rate_limited' ? 'ai_rate' : 'ai_fail');
+    if (e && e.code === 'not_granted') $('aiPanel').hidden = true;
+  }
+  aiBusy = false; $('aiBtn').disabled = false;
+});
+
+// =====================================================================
+// Quiz
+// =====================================================================
+let quizDeck = null, Q = null;
+function renderQuizSetup() {
+  if (Q && !Q.done) return;
+  if (!S.decks.find(d => d.id === quizDeck)) quizDeck = (S.decks.find(d => d.cards.length >= 2) || S.decks[0] || {}).id;
+  $('quizSetup').hidden = false; $('quizRun').hidden = true; $('quizDone').hidden = true;
+  $('quizChips').innerHTML = S.decks.map(d => `<button class="chip ${d.id === quizDeck ? 'on' : ''}" data-q="${d.id}"><span class="dot" style="background:${d.color}"></span>${esc(d.name)} <span class="num" style="opacity:.6">${d.cards.length}</span></button>`).join('');
+  const d = S.decks.find(x => x.id === quizDeck);
+  const ok = d && d.cards.length >= 2;
+  $('quizStart').disabled = !ok;
+  $('quizNote').textContent = !d ? t('quiz_make_deck') : ok ? t('quiz_n', { n: Math.min(10, d.cards.length) }) : t('quiz_need2');
+}
+$('quizChips').addEventListener('click', e => { const c = e.target.closest('[data-q]'); if (c) { quizDeck = c.dataset.q; renderQuizSetup(); } });
+function startQuiz() {
+  const d = S.decks.find(x => x.id === quizDeck); if (!d || d.cards.length < 2) return;
+  const others = S.decks.flatMap(x => x.cards).map(c => c.a);
+  const qs = shuffle(d.cards.slice()).slice(0, 10).map(c => {
+    const wrong = shuffle([...new Set(d.cards.filter(o => o !== c && o.a !== c.a).map(o => o.a))]);
+    const extra = shuffle([...new Set(others.filter(a => a !== c.a && !wrong.includes(a)))]);
+    const opts = shuffle([c.a, ...wrong.concat(extra).slice(0, 3)]);
+    return { card: c, opts, answer: null };
+  });
+  Q = { deck: d, qs, i: 0, right: 0, done: false };
+  $('quizSetup').hidden = true; $('quizDone').hidden = true; $('quizRun').hidden = false;
+  showQ();
+}
+function showQ() {
+  const q = Q.qs[Q.i];
+  $('qCount').textContent = t('q_of', { i: Q.i + 1, n: Q.qs.length });
+  $('qScore').textContent = t('correct', { n: Q.right });
+  $('qProg').style.width = (Q.i / Q.qs.length * 100) + '%';
+  $('qText').textContent = q.card.q;
+  $('qOpts').innerHTML = q.opts.map((o, i) => `<button class="opt" data-i="${i}"><b>${'ABCD'[i]}</b><span>${esc(o)}</span></button>`).join('');
+  $('qNext').hidden = true;
+}
+$('qOpts').addEventListener('click', e => {
+  const b = e.target.closest('.opt'); const q = Q && Q.qs[Q.i];
+  if (!b || !q || q.answer !== null) return;
+  q.answer = q.opts[+b.dataset.i];
+  const right = q.answer === q.card.a;
+  if (right) Q.right++;
+  q.card.box = right ? Math.min(5, (q.card.box || 1) + 1) : 1;
+  [...$('qOpts').children].forEach((el, i) => { el.disabled = true; if (q.opts[i] === q.card.a) el.classList.add('right'); else if (el === b) el.classList.add('wrong'); });
+  $('qScore').textContent = t('correct', { n: Q.right });
+  $('qNext').hidden = false; $('qNext').textContent = t(Q.i === Q.qs.length - 1 ? 'see_score' : 'next_q');
+  $('qNext').focus();
+});
+$('qNext').addEventListener('click', () => {
+  if (Q.i < Q.qs.length - 1) { Q.i++; showQ(); return; }
+  Q.done = true;
+  const pct = Math.round(Q.right / Q.qs.length * 100);
+  day().quizzes.push(pct); save();
+  $('quizRun').hidden = true; $('quizDone').hidden = false;
+  $('qFinal').textContent = `${Q.right}/${Q.qs.length}`;
+  $('qVerdict').innerHTML = t(pct === 100 ? 'v100' : pct >= 80 ? 'v80' : pct >= 50 ? 'v50' : 'v0');
+  const miss = Q.qs.filter(q => q.answer !== q.card.a);
+  $('qMisses').innerHTML = miss.length ? `<h3>${t('to_review')}</h3>` + miss.map(q => `<div class="miss"><b>${esc(q.card.q)}</b><br><span style="color:var(--good)">✓ ${esc(q.card.a)}</span><br><span class="meta">${t('you_picked')} ${esc(q.answer)}</span></div>`).join('') : '';
+});
+$('quizStart').addEventListener('click', startQuiz);
+$('qAgain').addEventListener('click', startQuiz);
+$('qOther').addEventListener('click', () => { Q = null; renderQuizSetup(); });
+
+// =====================================================================
+// Focus timer
+// =====================================================================
+const PRESETS = [[25, 5], [50, 10], [15, 3], [45, 15]];
+const T = { mode: 'work', running: false, left: 25 * 60, end: 0, ac: null };
+const CIRC = 2 * Math.PI * 115;
+function lenOf(mode) { return (mode === 'work' ? S.focus.work : S.focus.brk) * 60; }
+function renderTimer() {
+  if (!T.running && T.left > lenOf(T.mode)) T.left = lenOf(T.mode);
+  $('presets').innerHTML = PRESETS.map(([w, b]) => `<button class="chip ${S.focus.work === w && S.focus.brk === b ? 'on' : ''}" data-w="${w}" data-b="${b}">${t('preset', { w, b })}</button>`).join('');
+  const blocks = day().blocks || 0;
+  $('sessions').innerHTML = Array.from({ length: Math.max(4, blocks + 1) }, (_, i) => `<i class="${i < blocks ? 'done' : ''}" title="Block ${i + 1}"></i>`).join('');
+  drawTimer();
+}
+function drawTimer() {
+  const s = Math.max(0, Math.ceil(T.left));
+  $('tLeft').textContent = `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  $('tMode').textContent = t(T.mode === 'work' ? 'mode_focus' : 'mode_break');
+  $('ringArc').style.stroke = T.mode === 'work' ? 'var(--accent)' : 'var(--good)';
+  $('ringArc').style.strokeDashoffset = CIRC * (1 - T.left / lenOf(T.mode));
+  $('tStart').textContent = t(T.running ? 'pause' : (T.left < lenOf(T.mode) ? 'resume' : 'start'));
+  $('tSkip').textContent = t(T.mode === 'work' ? 'skip_break' : 'skip_brk2');
+  document.title = T.running ? `${$('tLeft').textContent} · ${t(T.mode === 'work' ? 'mode_focus' : 'mode_break')} · Study Desk` : 'Study Desk';
+}
+function beep() {
+  try {
+    const ac = T.ac; if (!ac) return;
+    [0, 0.25, 0.5].forEach(o => { const os = ac.createOscillator(), g = ac.createGain(); os.frequency.value = 880; g.gain.setValueAtTime(0.0001, ac.currentTime + o); g.gain.exponentialRampToValueAtTime(0.25, ac.currentTime + o + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + o + 0.2); os.connect(g); g.connect(ac.destination); os.start(ac.currentTime + o); os.stop(ac.currentTime + o + 0.22); });
+  } catch (e) {}
+}
+function finishBlock(completed) {
+  if (T.mode === 'work') {
+    const mins = (lenOf('work') - T.left) / 60;
+    if (mins > 0.5) day().minutes += mins;
+    if (completed) { day().blocks = (day().blocks || 0) + 1; toast(t('block_done')); }
+    save();
+    T.mode = 'brk';
+  } else { T.mode = 'work'; if (completed) toast(t('break_over')); }
+  T.left = lenOf(T.mode);
+  if (completed) { beep(); T.end = Date.now() + T.left * 1000; } else T.running = false;
+  renderTimer();
+}
+setInterval(() => {
+  if (!T.running) return;
+  T.left = (T.end - Date.now()) / 1000;
+  if (T.left <= 0) finishBlock(true);
+  if (location.hash === '#focus') drawTimer(); else document.title = `${Math.floor(Math.max(0, T.left) / 60)}:${String(Math.floor(Math.max(0, T.left) % 60)).padStart(2, '0')} · Study Desk`;
+}, 250);
+$('tStart').addEventListener('click', () => {
+  try { if (!T.ac) T.ac = new (window.AudioContext || window.webkitAudioContext)(); T.ac.resume && T.ac.resume().catch(() => {}); } catch (e) {}
+  T.running = !T.running;
+  if (T.running) T.end = Date.now() + T.left * 1000;
+  drawTimer();
+});
+$('tReset').addEventListener('click', () => {
+  if (T.mode === 'work') { const mins = (lenOf('work') - T.left) / 60; if (mins > 1) { day().minutes += mins; save(); } }
+  T.running = false; T.left = lenOf(T.mode); drawTimer();
+});
+$('tSkip').addEventListener('click', () => finishBlock(false));
+$('presets').addEventListener('click', e => {
+  const c = e.target.closest('[data-w]'); if (!c) return;
+  S.focus = { work: +c.dataset.w, brk: +c.dataset.b }; save();
+  if (!T.running) T.left = lenOf(T.mode);
+  renderTimer();
+});
+
+// =====================================================================
+// Notes
+// =====================================================================
+let curNote = null;
+function renderNotes() {
+  S.notes.sort((a, b) => b.updated - a.updated);
+  if (!S.notes.find(n => n.id === curNote)) curNote = S.notes[0] ? S.notes[0].id : null;
+  $('noteList').innerHTML = S.notes.length ? S.notes.map(n => `<button class="note-item ${n.id === curNote ? 'on' : ''}" data-n="${n.id}"><b>${esc(n.title || t('untitled'))}</b><small>${fmtDate(n.updated, { month: 'short', day: 'numeric' })} · ${esc((n.body || '').slice(0, 40))}</small></button>`).join('')
+    : `<p class="empty">${t('no_notes')}</p>`;
+  const n = S.notes.find(x => x.id === curNote);
+  $('noteEditor').style.visibility = n ? 'visible' : 'hidden';
+  if (n) {
+    if (document.activeElement !== $('noteTitle')) $('noteTitle').value = n.title;
+    if (document.activeElement !== $('noteBody')) $('noteBody').value = n.body;
+    const words = (n.body.match(/\S+/g) || []).length;
+    $('noteMeta').textContent = t('words_saved', { n: words });
+  }
+}
+$('noteList').addEventListener('click', e => { const b = e.target.closest('[data-n]'); if (b) { curNote = b.dataset.n; $('noteTitle').blur(); $('noteBody').blur(); renderNotes(); } });
+$('newNote').addEventListener('click', () => { const n = { id: uid(), title: '', body: '', updated: Date.now() }; S.notes.unshift(n); curNote = n.id; save(); renderNotes(); $('noteTitle').focus(); });
+for (const id of ['noteTitle', 'noteBody']) $(id).addEventListener('input', () => {
+  const n = S.notes.find(x => x.id === curNote); if (!n) return;
+  n.title = $('noteTitle').value; n.body = $('noteBody').value; n.updated = Date.now();
+  save(); renderNotes();
+});
+$('delNote').addEventListener('click', () => {
+  const b = $('delNote');
+  if (b.dataset.confirm !== curNote) { b.dataset.confirm = curNote; b.textContent = t('click_again'); setTimeout(() => { b.dataset.confirm = ''; b.textContent = t('delete_note'); }, 3000); return; }
+  S.notes = S.notes.filter(n => n.id !== curNote); curNote = null; b.dataset.confirm = ''; b.textContent = t('delete_note'); save(); renderNotes();
+});
+
+// =====================================================================
+// Start
+// =====================================================================
+function renderAll() { T.left = Math.min(T.left, lenOf(T.mode)); route(); }
+S = normalize(loadLocal());
+LANG = S.lang && LANGS[S.lang] ? S.lang : (((navigator.language || 'en').slice(0, 2) in LANGS) ? navigator.language.slice(0, 2) : 'en');
+T.left = lenOf('work');
+if (!S.libSeeded) { LIBRARY.forEach(sb => addSubject(sb, true)); S.libSeeded = true; saveLocal(); }
+applyLang();
+renderAll();
+connectAccount();
+connectAI();
+</script>
+</body>
+</html>
